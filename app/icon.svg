@@ -1,0 +1,364 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1024 1024"
+  width="1024"
+  height="1024"
+  fill="none"
+>
+  <title>Calc</title>
+  <desc>Minimal calculator logo mark for Calc</desc>
+
+  <defs>
+
+    <!-- =====================================================
+         CALCULATOR BODY GRADIENT
+         ===================================================== -->
+
+    <linearGradient
+      id="calcBody"
+      x1="512"
+      y1="56"
+      x2="512"
+      y2="968"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="48%" stop-color="#F5F7FA"/>
+      <stop offset="100%" stop-color="#E6EBF2"/>
+    </linearGradient>
+
+    <!-- =====================================================
+         DISPLAY GRADIENT
+         ===================================================== -->
+
+    <linearGradient
+      id="display"
+      x1="238"
+      y1="152"
+      x2="786"
+      y2="408"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop offset="0%" stop-color="#161C27"/>
+      <stop offset="100%" stop-color="#0B1018"/>
+    </linearGradient>
+
+  </defs>
+
+
+  <!-- =====================================================
+       CALCULATOR BODY
+       Transparent outside
+       ===================================================== -->
+
+  <rect
+    x="152"
+    y="56"
+    width="720"
+    height="912"
+    rx="184"
+    fill="url(#calcBody)"
+  />
+
+  <!-- Ultra-clean outer edge -->
+
+  <rect
+    x="153.5"
+    y="57.5"
+    width="717"
+    height="909"
+    rx="182.5"
+    stroke="#D4DCE7"
+    stroke-width="5"
+  />
+
+
+  <!-- =====================================================
+       DISPLAY
+       ===================================================== -->
+
+  <rect
+    x="238"
+    y="152"
+    width="548"
+    height="256"
+    rx="76"
+    fill="url(#display)"
+  />
+
+  <!-- Subtle display edge -->
+
+  <rect
+    x="240.5"
+    y="154.5"
+    width="543"
+    height="251"
+    rx="73.5"
+    stroke="#202937"
+    stroke-width="5"
+    opacity="0.75"
+  />
+
+
+  <!-- =====================================================
+       DISPLAY BLUE INDICATOR
+       ===================================================== -->
+
+  <rect
+    x="302"
+    y="206"
+    width="128"
+    height="24"
+    rx="12"
+    fill="#1557FF"
+  />
+
+
+  <!-- =====================================================
+       DISPLAY PLUS SYMBOL
+       ===================================================== -->
+
+  <path
+    d="
+      M348 290
+      V354
+
+      M316 322
+      H380
+    "
+    stroke="#FFFFFF"
+    stroke-width="26"
+    stroke-linecap="round"
+  />
+
+
+  <!-- =====================================================
+       DISPLAY RESULT
+       ===================================================== -->
+
+  <rect
+    x="476"
+    y="280"
+    width="222"
+    height="26"
+    rx="13"
+    fill="#FFFFFF"
+  />
+
+  <rect
+    x="476"
+    y="330"
+    width="156"
+    height="26"
+    rx="13"
+    fill="#1557FF"
+  />
+
+
+  <!-- =====================================================
+       BUTTON SYSTEM
+       ===================================================== -->
+
+  <!--
+      Buttons are deliberately large.
+      This keeps the identity recognizable
+      even when the logo is reduced dramatically.
+  -->
+
+
+  <!-- =====================================================
+       ROW 1 — PLUS
+       ===================================================== -->
+
+  <rect
+    x="238"
+    y="470"
+    width="156"
+    height="156"
+    rx="50"
+    fill="#DDE4ED"
+  />
+
+  <path
+    d="
+      M316 514
+      V582
+
+      M282 548
+      H350
+    "
+    stroke="#111722"
+    stroke-width="26"
+    stroke-linecap="round"
+  />
+
+
+  <!-- =====================================================
+       ROW 1 — MINUS
+       ===================================================== -->
+
+  <rect
+    x="434"
+    y="470"
+    width="156"
+    height="156"
+    rx="50"
+    fill="#DDE4ED"
+  />
+
+  <rect
+    x="476"
+    y="536"
+    width="72"
+    height="26"
+    rx="13"
+    fill="#111722"
+  />
+
+
+  <!-- =====================================================
+       ROW 1 — MULTIPLY
+       ===================================================== -->
+
+  <rect
+    x="630"
+    y="470"
+    width="156"
+    height="156"
+    rx="50"
+    fill="#1557FF"
+  />
+
+  <path
+    d="
+      M674 514
+      L742 582
+
+      M742 514
+      L674 582
+    "
+    stroke="#FFFFFF"
+    stroke-width="26"
+    stroke-linecap="round"
+  />
+
+
+  <!-- =====================================================
+       ROW 2 — DIVIDE
+       ===================================================== -->
+
+  <rect
+    x="238"
+    y="662"
+    width="156"
+    height="156"
+    rx="50"
+    fill="#DDE4ED"
+  />
+
+  <circle
+    cx="316"
+    cy="704"
+    r="12"
+    fill="#111722"
+  />
+
+  <rect
+    x="278"
+    y="732"
+    width="76"
+    height="24"
+    rx="12"
+    fill="#111722"
+  />
+
+  <circle
+    cx="316"
+    cy="776"
+    r="12"
+    fill="#111722"
+  />
+
+
+  <!-- =====================================================
+       ROW 2 — PERCENT
+       ===================================================== -->
+
+  <rect
+    x="434"
+    y="662"
+    width="156"
+    height="156"
+    rx="50"
+    fill="#DDE4ED"
+  />
+
+  <circle
+    cx="480"
+    cy="706"
+    r="12"
+    fill="#111722"
+  />
+
+  <circle
+    cx="552"
+    cy="774"
+    r="12"
+    fill="#111722"
+  />
+
+  <path
+    d="
+      M556 694
+      L476 786
+    "
+    stroke="#111722"
+    stroke-width="22"
+    stroke-linecap="round"
+  />
+
+
+  <!-- =====================================================
+       ROW 2 — EQUALS
+       ===================================================== -->
+
+  <rect
+    x="630"
+    y="662"
+    width="156"
+    height="156"
+    rx="50"
+    fill="#1557FF"
+  />
+
+  <rect
+    x="674"
+    y="708"
+    width="68"
+    height="24"
+    rx="12"
+    fill="#FFFFFF"
+  />
+
+  <rect
+    x="674"
+    y="756"
+    width="68"
+    height="24"
+    rx="12"
+    fill="#FFFFFF"
+  />
+
+
+  <!-- =====================================================
+       BRAND ACCENT
+       ===================================================== -->
+
+  <circle
+    cx="738"
+    cy="116"
+    r="14"
+    fill="#1557FF"
+  />
+
+</svg>
