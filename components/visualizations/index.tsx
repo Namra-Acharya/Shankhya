@@ -53,10 +53,12 @@ function clamp(n: number, min: number, max: number) {
   return Math.min(Math.max(n, min), max);
 }
 
-function formatDisplay(n: number): string {
-  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-  return Number(n.toFixed(1)).toString();
+function formatDisplay(n: number, unit?: string): string {
+  let s: string;
+  if (Math.abs(n) >= 1_000_000) s = `${(n / 1_000_000).toFixed(1)}M`;
+  else if (Math.abs(n) >= 1_000) s = `${(n / 1_000).toFixed(1)}k`;
+  else s = Number(n.toFixed(1)).toString();
+  return unit ? `${unit}${s}` : s;
 }
 
 // ============ PROGRESS BAR ============
@@ -194,9 +196,11 @@ export function LineChart({
 export function BarChart({
   data,
   height = 160,
+  unit,
 }: {
   data: VisualizationDatum[];
   height?: number;
+  unit?: string;
 }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
@@ -206,7 +210,7 @@ export function BarChart({
         return (
           <div key={d.label} className="flex flex-1 flex-col items-center gap-1.5">
             <span className="text-[10px] text-text-muted dark:text-dark-text-muted">
-              {formatDisplay(d.value)}
+              {formatDisplay(d.value, unit)}
             </span>
             <div className="flex w-full items-end justify-center" style={{ height }}>
               <div
@@ -296,8 +300,10 @@ export function DonutChart({
 
 export function Timeline({
   milestones,
+  unit,
 }: {
   milestones: { label: string; date?: string; value?: number }[];
+  unit?: string;
 }) {
   return (
     <div className="relative pl-5">
@@ -312,7 +318,7 @@ export function Timeline({
             <p className="text-sm font-medium text-text-primary dark:text-dark-text-primary">{m.label}</p>
             {m.date && <p className="text-xs text-text-muted dark:text-dark-text-muted">{m.date}</p>}
             {m.value !== undefined && (
-              <p className="text-sm font-semibold text-accent-700 dark:text-accent-400">{formatDisplay(m.value)}</p>
+              <p className="text-sm font-semibold text-accent-700 dark:text-accent-400">{formatDisplay(m.value, unit)}</p>
             )}
           </li>
         ))}
@@ -325,8 +331,10 @@ export function Timeline({
 
 export function Comparison({
   data,
+  unit,
 }: {
   data: VisualizationDatum[];
+  unit?: string;
 }) {
   const max = Math.max(...data.map((d) => Math.max(d.value, d.secondaryValue ?? 0)), 1);
   return (
@@ -339,8 +347,8 @@ export function Comparison({
             <div className="mb-1 flex items-center justify-between text-xs">
               <span className="text-text-secondary dark:text-dark-text-secondary">{d.label}</span>
               <span className="font-medium text-text-primary dark:text-dark-text-primary">
-                {formatDisplay(d.value)}
-                {d.secondaryValue !== undefined && ` vs ${formatDisplay(d.secondaryValue)}`}
+                {formatDisplay(d.value, unit)}
+                {d.secondaryValue !== undefined && ` vs ${formatDisplay(d.secondaryValue, unit)}`}
               </span>
             </div>
             <div className="space-y-1">
@@ -450,13 +458,13 @@ export function VisualizationRenderer({ config }: { config: VisualizationConfig 
     case "line":
       return <LineChart data={config.data} xLabels={config.xLabels} yLabel={config.yLabel} />;
     case "bar":
-      return <BarChart data={config.data} />;
+      return <BarChart data={config.data} unit={config.unit} />;
     case "donut":
       return <DonutChart data={config.data} />;
     case "timeline":
-      return <Timeline milestones={config.milestones ?? config.data.map((d) => ({ label: d.label, value: d.value }))} />;
+      return <Timeline milestones={config.milestones ?? config.data.map((d) => ({ label: d.label, value: d.value }))} unit={config.unit} />;
     case "comparison":
-      return <Comparison data={config.data} />;
+      return <Comparison data={config.data} unit={config.unit} />;
     case "geometry":
       return <GeometryDiagram shape={config.shape ?? "rectangle"} labels={config.data.map((d) => d.label)} />;
     case "steps":

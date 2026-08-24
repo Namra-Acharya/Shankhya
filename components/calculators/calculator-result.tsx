@@ -4,37 +4,41 @@ import { useCallback, useState } from "react";
 import { Check, Copy, Share2 } from "lucide-react";
 
 import type { CalculatorResult, ResultValue } from "@/lib/calculators/types";
-import { formatNumber, formatCurrency, formatPercentage } from "@/lib/utils/format";
+import { formatNumber, formatPercentage } from "@/lib/utils/format";
+import { useCurrency } from "@/lib/currency/context";
 import { VisualizationRenderer, type VisualizationConfig } from "@/components/visualizations";
 
 interface CalculatorResultViewProps {
   result: CalculatorResult;
 }
 
-/**
- * Safely format a result value.
- * If the value is already a pre-formatted string (e.g. "₹5,00,000"),
- * it will be returned as-is. If it's a raw number, it is formatted
- * according to the requested format.
- */
-function formatResultValue(value: ResultValue): string {
-  if (value.format === "number") {
-    const num = Number(value.value);
-    return Number.isFinite(num) ? formatNumber(num, 2) : String(value.value);
-  }
-  if (value.format === "currency") {
-    const num = Number(value.value);
-    return Number.isFinite(num) ? formatCurrency(num, "INR", 0) : String(value.value);
-  }
-  if (value.format === "percentage") {
-    const num = Number(value.value);
-    return Number.isFinite(num) ? formatPercentage(num, 1) : String(value.value);
-  }
-  return String(value.value);
-}
-
 export function CalculatorResultView({ result }: CalculatorResultViewProps) {
+  const { format: formatMoney } = useCurrency();
   const [copied, setCopied] = useState(false);
+
+  /**
+   * Safely format a result value.
+   * Currency values stored as raw numbers are formatted with the selected
+   * currency; values already stored as strings are returned as-is.
+   */
+  const formatResultValue = useCallback(
+    (value: ResultValue): string => {
+      if (value.format === "number") {
+        const num = Number(value.value);
+        return Number.isFinite(num) ? formatNumber(num, 2) : String(value.value);
+      }
+      if (value.format === "currency") {
+        const num = Number(value.value);
+        return Number.isFinite(num) ? formatMoney(num) : String(value.value);
+      }
+      if (value.format === "percentage") {
+        const num = Number(value.value);
+        return Number.isFinite(num) ? formatPercentage(num, 1) : String(value.value);
+      }
+      return String(value.value);
+    },
+    [formatMoney]
+  );
 
   const handleCopy = useCallback(async () => {
     const text = result.sections
@@ -49,7 +53,7 @@ export function CalculatorResultView({ result }: CalculatorResultViewProps) {
     } catch {
       // Clipboard not available
     }
-  }, [result]);
+  }, [result, formatResultValue]);
 
   const handleShare = useCallback(async () => {
     const text = result.sections
@@ -64,7 +68,7 @@ export function CalculatorResultView({ result }: CalculatorResultViewProps) {
     } catch {
       // Share not available
     }
-  }, [result]);
+  }, [result, formatResultValue]);
 
   return (
     <div className="animate-fade-in-up space-y-6">

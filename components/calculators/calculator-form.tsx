@@ -8,6 +8,8 @@ import { expandInputs } from "@/lib/calculators/types";
 import { getDefaultValues, validateCalculator } from "@/lib/utils/validation";
 import { getClientCalculator } from "@/lib/calculators/client-registry";
 import { CalculatorInput } from "@/components/calculators/calculator-input";
+import { CurrencySelector } from "@/components/currency/currency-selector";
+import { useCurrency } from "@/lib/currency/context";
 import { CalculatorResultView } from "@/components/calculators/calculator-result";
 import { StandardCalculator, ScientificCalculator } from "@/components/calculators/calculator-visual";
 
@@ -17,12 +19,19 @@ interface CalculatorFormProps {
 
 export function CalculatorForm({ slug }: CalculatorFormProps) {
   const calculator = useMemo(() => getClientCalculator(slug), [slug]);
+  const { symbol: currencySymbol } = useCurrency();
   const [values, setValues] = useState<CalculatorValues>(() =>
     getDefaultValues(calculator?.inputs ?? [])
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<CalculatorResult | null>(null);
   const [hasCalculated, setHasCalculated] = useState(false);
+
+  // Whether this calculator involves monetary values (and therefore gets a selector)
+  const hasMoney = useMemo(
+    () => !!calculator?.inputs.some((input) => input.type === "currency"),
+    [calculator]
+  );
 
   const visibleInputs = useMemo(() => {
     if (!calculator) return [];
@@ -140,6 +149,11 @@ export function CalculatorForm({ slug }: CalculatorFormProps) {
       </div>
 
       <div className="p-4 sm:p-6" onKeyDown={handleKeyDown}>
+        {hasMoney && (
+          <div className="mb-5 max-w-xs">
+            <CurrencySelector label="Currency" />
+          </div>
+        )}
         <div className="grid gap-5 sm:grid-cols-2">
           {expandInputs(visibleInputs, values).map((input) => (
             <div key={input.id} className={input.fullWidth ? "sm:col-span-2" : ""}>
@@ -148,13 +162,14 @@ export function CalculatorForm({ slug }: CalculatorFormProps) {
                 value={values[input.id]}
                 error={errors[input.id]}
                 onChange={handleChange}
+                currencySymbol={currencySymbol}
               />
             </div>
           ))}
         </div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <button type="button" onClick={handleCalculate} className="btn-primary h-14 flex-1 sm:h-12">
+          <button type="button" onClick={handleCalculate} className="btn-primary min-h-12 flex-1 items-center justify-center sm:min-h-12">
             <CalculatorIcon className="h-4 w-4" aria-hidden="true" />
             Calculate
           </button>

@@ -19,6 +19,7 @@ export function Header() {
   const pathname = usePathname();
   const categoriesRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -26,7 +27,15 @@ export function Header() {
       if (categoriesRef.current && !categoriesRef.current.contains(e.target as Node)) {
         setCategoriesOpen(false);
       }
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+      // Only close the mobile search when the tap is outside BOTH search
+      // containers. On mobile, the search is rendered in its own container
+      // (separate from the desktop searchRef), so without this check the
+      // mousedown that precedes a tap would unmount the result link before
+      // the browser dispatches click, swallowing navigation.
+      const insideSearch =
+        (searchRef.current && searchRef.current.contains(e.target as Node)) ||
+        (mobileSearchRef.current && mobileSearchRef.current.contains(e.target as Node));
+      if (!insideSearch) {
         setSearchOpen(false);
       }
     };
@@ -198,7 +207,7 @@ export function Header() {
           </div>
 
           {/* Mobile search toggle */}
-          <div className="relative lg:hidden">
+          <div ref={mobileSearchRef} className="relative lg:hidden">
             {searchOpen ? (
               <div className="absolute right-0 top-1/2 z-50 w-64 -translate-y-1/2">
                 <CalculatorSearch autoFocus />

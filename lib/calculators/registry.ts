@@ -334,21 +334,127 @@ export function getRelatedCalculators(
     .filter((c): c is CalculatorDefinition => Boolean(c));
 }
 
+/**
+ * Relevance-first calculator search.
+ *
+ * Ranking priorities (highest first):
+ *  1. Exact title match
+ *  2. Strong title/token match (all query tokens appear in title)
+ *  3. Slug match
+ *  4. Dedicated keywords/tags match
+ *  5. Description match
+ *  6. Category match
+ *  7. Weak content match (lowest score)
+ *
+ * Exact title matches always dominate fuzzy/weak matches.
+ */
+/**
+ * Return 2 if `token` appears as a whole word in `text`, 1 if it is a
+ * prefix of a word in `text`, and 0 otherwise.
+ *
+ * Word boundaries treat letters/digits as word characters, so "age"
+ * matches inside "Age Calculator" but NOT inside "average" (where the
+ * letters "age" appear mid-word). This prevents substring flukes from
+ * outranking exact title matches.
+ */
+function matchLevel(text: string, token: string): number {
+  if (!text || !token) return 0;
+  const tok = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const wholeWord = new RegExp(`(^|[^a-z0-9])${tok}([^a-z0-9]|$)`);
+  const wordPrefix = new RegExp(`(^|[^a-z0-9])${tok}`);
+  if (wholeWord.test(text)) return 2;
+  if (wordPrefix.test(text)) return 1;
+  return 0;
+}
+
+/**
+ * Analyze how well each flat query term matches `text`.
+ * Returns whole matches, a whole-word prefix match flag, and a "precision"
+ * count equal to (word-count of text) − (whole terms matched), so shorter,
+ * closer titles score better among calculators with the same terms matched.
+ */
+function fieldMatch(text: string, terms: string[]): {
+  words: number;
+  whole: number;
+  prefix: boolean;
+  exact: boolean;
+} {
+  if (!text) return { words: 0, whole: 0, prefix: false, exact: false };
+  const words = text.split(/\s+/).filter(Boolean).length;
+  const whole = terms.reduce((n, t) => n + (matchLevel(text, t) === 2 ? 1 : 0), 0);
+  const prefix = terms.some((t) => matchLevel(text, t) === 1);
+  const exact = text === terms.join(" ");
+  return { words, whole, prefix, exact };
+}
+
 export function searchCalculators(query: string): CalculatorDefinition[] {
-  const q = query.toLowerCase().trim();
+  const q = query.toLowerCase().trim().replace(/\s+/g, " ").replace(/[^\w\s-]/g, "");
   if (!q) return [];
 
-  const terms = q.split(/\s+/);
-  return Object.values(allCalculators).filter((c) => {
-    const haystack = [
-      c.name,
-      c.shortDescription,
-      c.category,
-      c.seo.keywords?.join(" ") ?? "",
-    ]
-      .join(" ")
-      .toLowerCase();
+  const terms = q.split(/\s+/).filter(Boolean);
+  const normalizedQuery = terms.join(" ");
 
-    return terms.every((term) => haystack.includes(term));
+  const scored = Object.values(allCalculators).map((c) => {
+    const title = fieldMatch(c.name.toLowerCase(), terms);
+    const slug = fieldMatch(c.slug.toLowerCase(), terms);
+    const keywords = fieldMatch((c.seo.keywords ?? []).map((k) => k.toLowerCase()).join(" "), terms);
+    const description = fieldMatch(c.shortDescription.toLowerCase(), terms);
+    const category = fieldMatch(c.category.toLowerCase(), terms);
+
+    const anyTitle = title.whole > 0 || title.prefix;
+    const anySlug = slug.whole > 0 || slug.prefix;
+    const anyKw = keywords.whole > 0 || keywords.prefix;
+    const anyDesc = description.whole > 0 || description.prefix;
+    const anyCat = category.whole > 0 || category.prefix;
+    const hasMatch = anyTitle || anySlug || anyKw || anyDesc || anyCat;
+
+    if (!hasMatch) return null;
+
+    // Relevance tuple, compared lexicographically (higher wins earlier).
+    // Earlier elements are strict priorities, so a title match always beats
+    // any combination of slug/keyword/description matches, and among equal
+    // title matches a closer (fewer extra words) title wins.
+    const tuple: number[] = [
+      // 1  Exact title match is perfect
+      title.exact ? 1 : 0,
+      // 2  Whole-word terms in the title
+      anyTitle && title.whole > 0 ? 1 : 0,
+      title.whole,
+      // 3  Title precision: shorter/closest titles rank first
+      -title.words + title.whole,
+      // 4  Weakest title signal: term is a word prefix
+      title.prefix ? 1 : 0,
+      // 5  Slug
+      slug.exact ? 1 : 0,
+      anySlug && slug.whole > 0 ? 1 : 0,
+      slug.whole,
+      -slug.words + slug.whole,
+      // 6  Dedicated keywords/tags
+      anyKw && keywords.whole > 0 ? 1 : 0,
+      keywords.whole,
+      -keywords.words + keywords.whole,
+      // 7  Description
+      anyDesc && description.whole > 0 ? 1 : 0,
+      description.whole,
+      -description.words + description.whole,
+      // 8  Category
+      anyCat ? 1 : 0,
+    ];
+
+    return { calculator: c, tuple };
   });
+
+  const cmp = (a: number[], b: number[]) => {
+    for (let i = 0; i < a.length; i++) {
+      const d = b[i] - a[i];
+      if (d !== 0) return d;
+    }
+    return 0;
+  };
+
+  return scored
+    .filter((s): s is NonNullable<typeof s> => s !== null)
+    .sort((a, b) => cmp(a.tuple, b.tuple))
+    .slice(0, 8)
+    .map((s) => s.calculator);
 }

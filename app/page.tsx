@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Search, Sparkles } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 
 import { CalculatorSearch } from "@/components/search/calculator-search";
 import { CalculatorCarousel, type CarouselCalculator } from "@/components/calculators/calculator-carousel";
@@ -55,8 +55,7 @@ export default function HomePage() {
       {/* Hero */}
       <section className="pb-12 pt-16 sm:pb-16 sm:pt-24 lg:pb-20 lg:pt-28" aria-labelledby="hero-heading">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-text-secondary dark:border-dark-border dark:bg-dark-surface dark:text-dark-text-secondary">
-            <Sparkles className="h-3 w-3 text-accent-500" aria-hidden="true" />
+          <p className="inline-flex items-center rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-text-secondary dark:border-dark-border dark:bg-dark-surface dark:text-dark-text-secondary">
             Simple calculations. Clear answers.
           </p>
           <h1

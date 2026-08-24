@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { CurrencyProvider } from "@/lib/currency/context";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, buildOrganizationSchema, buildWebSiteSchema } from "@/lib/seo/metadata";
@@ -62,13 +63,15 @@ export default function RootLayout({
           Skip to main content
         </a>
         <ThemeProvider>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main id="main" className="flex-1">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <CurrencyProvider>
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main id="main" className="flex-1">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </CurrencyProvider>
         </ThemeProvider>
       </body>
     </html>

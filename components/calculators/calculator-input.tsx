@@ -7,9 +7,11 @@ interface CalculatorInputProps {
   value: string | number | boolean | undefined;
   error?: string;
   onChange: (id: string, value: string | number | boolean) => void;
+  /** Optional override for currency inputs' symbol (from the active currency). */
+  currencySymbol?: string;
 }
 
-export function CalculatorInput({ input, value, error, onChange }: CalculatorInputProps) {
+export function CalculatorInput({ input, value, error, onChange, currencySymbol }: CalculatorInputProps) {
   const inputId = `input-${input.id}`;
   const describedBy = [
     input.hint ? `${inputId}-hint` : null,
@@ -17,6 +19,10 @@ export function CalculatorInput({ input, value, error, onChange }: CalculatorInp
   ]
     .filter(Boolean)
     .join(" ");
+
+  const isCurrency = input.type === "currency";
+  // Use the active currency symbol for currency inputs; fall back to input.unit.
+  const prefix = isCurrency ? currencySymbol ?? input.unit : undefined;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const val = e.target.value;
@@ -120,9 +126,9 @@ export function CalculatorInput({ input, value, error, onChange }: CalculatorInp
         </div>
       ) : (
         <div className="relative">
-          {input.unit && input.type === "currency" && (
+          {prefix && isCurrency && (
             <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-text-muted dark:text-dark-text-muted">
-              {input.unit}
+              {prefix}
             </span>
           )}
           <input
@@ -133,12 +139,12 @@ export function CalculatorInput({ input, value, error, onChange }: CalculatorInp
                 : "text"
             }
             {...commonProps}
-            className={`${commonProps.className} ${input.unit && input.type === "currency" ? "pl-8" : ""}`}
+            className={`${commonProps.className} ${prefix && isCurrency ? "pl-8" : ""}`}
             placeholder={input.placeholder}
             value={(value as string) ?? ""}
             onChange={handleChange}
           />
-          {input.unit && input.type !== "currency" && (
+          {input.unit && !isCurrency && (
             <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-text-muted dark:text-dark-text-muted">
               {input.unit}
             </span>

@@ -47,6 +47,14 @@ export function CalculatorSearch({ autoFocus = false }: { autoFocus?: boolean })
     return () => clearTimeout(debounce);
   }, [query]);
 
+  // Ensure the search input is actually focused on mobile touch devices,
+  // where browsers may not honor autoFocus on conditionally-mounted inputs.
+  useEffect(() => {
+    if (autoFocus) {
+      inputRef.current?.focus();
+    }
+  }, [autoFocus]);
+
   // Close on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
