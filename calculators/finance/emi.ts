@@ -4,7 +4,9 @@
  */
 
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatNumber, formatINR, roundTo } from "@/lib/utils/format";
+import { formatNumber, roundTo } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 
 /**
@@ -87,7 +89,7 @@ export const emiCalculator: CalculatorDefinition = {
     },
   ],
 
-  calculate: (values) => {
+  calculate: (values, currency = DEFAULT_CURRENCY) => {
     const principal = parseNumber(values.principal) ?? 0;
     const rate = parseNumber(values.rate) ?? 0;
     const tenureYears = parseNumber(values.tenure) ?? 0;
@@ -136,7 +138,7 @@ export const emiCalculator: CalculatorDefinition = {
             {
               id: "emi",
               label: "YOUR MONTHLY EMI",
-              value: formatINR(roundTo(emi)),
+              value: roundTo(emi),
               format: "currency",
               primary: true,
               description: `per month for ${tenureMonths} months (${tenureYears} years)`,
@@ -150,19 +152,19 @@ export const emiCalculator: CalculatorDefinition = {
             {
               id: "principal",
               label: "Principal",
-              value: formatINR(roundTo(principal)),
+              value: roundTo(principal),
               format: "currency",
             },
             {
               id: "totalInterest",
               label: "Total interest",
-              value: formatINR(roundTo(totalInterest)),
+              value: roundTo(totalInterest),
               format: "currency",
             },
             {
               id: "totalPayment",
               label: "Total payment",
-              value: formatINR(roundTo(totalPayment)),
+              value: roundTo(totalPayment),
               format: "currency",
             },
           ],
@@ -193,6 +195,7 @@ export const emiCalculator: CalculatorDefinition = {
           { label: "Principal", value: roundTo(principal, 0), color: "var(--accent)" },
           { label: "Interest", value: roundTo(totalInterest, 0), color: "var(--muted)" },
         ],
+        money: true,
       },
       charts: [
         {
@@ -201,9 +204,11 @@ export const emiCalculator: CalculatorDefinition = {
           data: chartData,
           xLabel: "Year",
           yLabel: "Remaining balance",
+          money: true,
         },
       ],
-      interpretation: `Your monthly EMI will be ${formatINR(roundTo(emi))} for ${tenureMonths} months. Over the full tenure, you will pay ${formatINR(roundTo(totalInterest))} in interest, making the total payment ${formatINR(roundTo(totalPayment))}.`,
+      interpretation: `Your monthly EMI will be ${formatMoney(roundTo(emi), currency)} for ${tenureMonths} months. Over the full tenure, you will pay ${formatMoney(roundTo(totalInterest), currency)} in interest, making the total payment ${formatMoney(roundTo(totalPayment), currency)}.`,
+      currency,
     };
   },
 

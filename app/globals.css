@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Respect reduced-motion: the BMI gauge indicator animates via CSS transition,
+   so it is disabled cleanly for users who prefer less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .bmi-gauge-indicator {
+    transition: none !important;
+  }
+}
+
 @layer base {
   :root {
     color-scheme: light;

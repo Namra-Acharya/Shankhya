@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 import { Gauge } from "@/components/visualizations/gauge";
+import { BmiGauge } from "@/components/visualizations/bmi-gauge";
 
 // ============ TYPES ============
 
@@ -33,6 +34,8 @@ export interface VisualizationConfig {
   segments?: { label: string; from: number; to: number; category?: string }[];
   /** Gauge only: decimal places for displayed value */
   decimals?: number;
+  /** Gauge: accessible label override */
+  ariaLabel?: string;
   /** Line chart: x labels */
   xLabels?: string[];
   /** Line chart: y axis label */
@@ -436,6 +439,14 @@ export function VisualizationRenderer({ config }: { config: VisualizationConfig 
   switch (config.type) {
     case "gauge":
       if (config.data.length === 0) return null;
+      // BMI-specific premium gauge: detect BMI segments (unit kg/m² with 4 ranges).
+      if (config.unit === "kg/m²" && config.segments && config.segments.length === 4) {
+        const bmiVal = config.data[0].value;
+        const bmiCategory =
+          (config.segments.find((s) => bmiVal >= s.from && bmiVal < s.to)?.category) ??
+          (bmiVal >= 30 ? "Obese" : "Underweight");
+        return <BmiGauge bmi={bmiVal} category={bmiCategory} />;
+      }
       return (
         <Gauge
           value={config.data[0].value}
@@ -445,6 +456,7 @@ export function VisualizationRenderer({ config }: { config: VisualizationConfig 
           unit={config.unit}
           segments={config.segments}
           decimals={config.decimals}
+          ariaLabel={config.ariaLabel}
         />
       );
     case "progress":

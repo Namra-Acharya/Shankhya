@@ -3,7 +3,7 @@
  */
 
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatNumber } from "@/lib/utils/format";
+import { roundTo } from "@/lib/utils/format";
 import { parseNumber } from "@/lib/utils/validation";
 
 export function calculateBMI(weightKg: number, heightCm: number): number {
@@ -11,11 +11,17 @@ export function calculateBMI(weightKg: number, heightCm: number): number {
   return weightKg / (heightM * heightM);
 }
 
+/** BMI category thresholds (single source of truth, shared with the gauge). */
+export const BMI_CATEGORIES = [
+  { label: "Underweight", min: 0, max: 18.5 },
+  { label: "Normal weight", min: 18.5, max: 25 },
+  { label: "Overweight", min: 25, max: 30 },
+  { label: "Obese", min: 30, max: Infinity },
+] as const;
+
 export function getBMICategory(bmi: number): string {
-  if (bmi < 18.5) return "Underweight";
-  if (bmi < 25) return "Normal weight";
-  if (bmi < 30) return "Overweight";
-  return "Obese";
+  const cat = BMI_CATEGORIES.find((c) => bmi >= c.min && bmi < c.max);
+  return cat?.label ?? (bmi < 18.5 ? "Underweight" : "Obese");
 }
 
 export const bmiCalculator: CalculatorDefinition = {
@@ -58,6 +64,7 @@ export const bmiCalculator: CalculatorDefinition = {
     const weight = parseNumber(values.weight) ?? 0;
     const height = parseNumber(values.height) ?? 0;
 
+    // Keep full precision internally; round only for display.
     const bmi = height > 0 ? calculateBMI(weight, height) : 0;
     const category = getBMICategory(bmi);
 
@@ -69,10 +76,10 @@ export const bmiCalculator: CalculatorDefinition = {
             {
               id: "bmi",
               label: "YOUR BMI",
-              value: formatNumber(bmi, 1),
+              value: roundTo(bmi, 1),
               format: "number",
               primary: true,
-              description: `kg/m²`,
+              description: `kg/m² · ${category}`,
             },
           ],
         },
@@ -92,19 +99,20 @@ export const bmiCalculator: CalculatorDefinition = {
       chart: {
         type: "gauge",
         title: "Your BMI on the scale",
-        data: [{ label: "BMI", value: Math.min(Math.max(bmi, 0), 40) }],
-        min: 0,
+        data: [{ label: "BMI", value: roundTo(bmi, 1) }],
+        min: 10,
         max: 40,
         unit: "kg/m²",
         decimals: 1,
+        ariaLabel: `Your BMI is ${bmi.toFixed(1)}, which falls in the ${category} category.`,
         segments: [
-          { label: "Under", from: 0, to: 18.5, category: "Underweight" },
+          { label: "Underweight", from: 0, to: 18.5, category: "Underweight" },
           { label: "Normal", from: 18.5, to: 25, category: "Normal weight" },
-          { label: "Over", from: 25, to: 30, category: "Overweight" },
+          { label: "Overweight", from: 25, to: 30, category: "Overweight" },
           { label: "Obesity", from: 30, to: 40, category: "Obesity" },
         ],
       },
-      interpretation: `Your BMI is ${formatNumber(bmi, 1)}. This falls in the "${category}" category. BMI is a screening tool, not a diagnosis. Consult a healthcare professional for a complete assessment.`,
+      interpretation: `Your BMI is ${bmi.toFixed(1)}. This falls in the "${category}" category. BMI is a screening tool, not a diagnosis. Consult a healthcare professional for a complete assessment.`,
     };
   },
 

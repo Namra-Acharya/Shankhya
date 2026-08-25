@@ -3,7 +3,7 @@
  */
 
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatNumber, formatPercentage, roundTo } from "@/lib/utils/format";
+import { formatNumber, formatPercentage } from "@/lib/utils/format";
 import { parseNumber } from "@/lib/utils/validation";
 
 export const percentageIncreaseCalculator: CalculatorDefinition = {

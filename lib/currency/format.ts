@@ -33,8 +33,10 @@ export function formatMoney(value: number, code: string, options: FormatMoneyOpt
   const formatted = new Intl.NumberFormat(currency.locale, {
     style: "currency",
     currency: currency.code,
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
+    // Floating decimals: show trailing minor units only when non-zero, and
+    // never show more precision than the currency convention (e.g. 0 for JPY).
+    minimumFractionDigits: 0,
+    maximumFractionDigits: Math.max(decimals, 0),
   }).format(value);
 
   if (options.showCode) {

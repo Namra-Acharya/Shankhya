@@ -10,10 +10,12 @@ import { VisualizationRenderer, type VisualizationConfig } from "@/components/vi
 
 interface CalculatorResultViewProps {
   result: CalculatorResult;
+  /** Whether this calculator uses monetary values (drives currency-aware chart labels) */
+  money?: boolean;
 }
 
-export function CalculatorResultView({ result }: CalculatorResultViewProps) {
-  const { format: formatMoney } = useCurrency();
+export function CalculatorResultView({ result, money = false }: CalculatorResultViewProps) {
+  const { format: formatMoney, symbol } = useCurrency();
   const [copied, setCopied] = useState(false);
 
   /**
@@ -147,12 +149,14 @@ export function CalculatorResultView({ result }: CalculatorResultViewProps) {
               })),
               min: chart.min,
               max: chart.max,
-              unit: chart.unit,
+              // Monetary calculators use the active currency symbol for chart axis/legend labels.
+              unit: money ? symbol : chart.unit,
               xLabels: chart.xLabel ? [chart.xLabel] : undefined,
               yLabel: chart.yLabel,
               milestones: chart.milestones,
               shape: chart.shape,
               steps: chart.steps,
+              ariaLabel: chart.ariaLabel,
             } as VisualizationConfig}
           />
         </div>

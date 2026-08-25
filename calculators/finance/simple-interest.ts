@@ -3,7 +3,9 @@
  */
 
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatINR, roundTo } from "@/lib/utils/format";
+import { roundTo } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 
 export function calculateSimpleInterest(
@@ -61,7 +63,7 @@ export const simpleInterestCalculator: CalculatorDefinition = {
     },
   ],
 
-  calculate: (values) => {
+  calculate: (values, currency = DEFAULT_CURRENCY) => {
     const principal = parseNumber(values.principal) ?? 0;
     const rate = parseNumber(values.rate) ?? 0;
     const years = parseNumber(values.years) ?? 0;
@@ -76,7 +78,7 @@ export const simpleInterestCalculator: CalculatorDefinition = {
             {
               id: "interest",
               label: "INTEREST EARNED",
-              value: formatINR(roundTo(interest)),
+              value: roundTo(interest),
               format: "currency",
               primary: true,
               description: `at ${rate}% for ${years} years`,
@@ -87,12 +89,12 @@ export const simpleInterestCalculator: CalculatorDefinition = {
           id: "totals",
           title: "Summary",
           values: [
-            { id: "principal", label: "Principal", value: formatINR(roundTo(principal)), format: "currency" },
-            { id: "amount", label: "Total amount", value: formatINR(roundTo(amount)), format: "currency" },
+            { id: "principal", label: "Principal", value: roundTo(principal), format: "currency" },
+            { id: "amount", label: "Total amount", value: roundTo(amount), format: "currency" },
           ],
         },
       ],
-      interpretation: `You will earn ${formatINR(roundTo(interest))} in simple interest on ${formatINR(roundTo(principal))} at ${rate}% for ${years} years. The total amount will be ${formatINR(roundTo(amount))}.`,
+      interpretation: `You will earn ${formatMoney(roundTo(interest), currency)} in simple interest on ${formatMoney(roundTo(principal), currency)} at ${rate}% for ${years} years. The total amount will be ${formatMoney(roundTo(amount), currency)}.`,
     };
   },
 

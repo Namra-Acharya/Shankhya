@@ -3,7 +3,9 @@
  */
 
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatNumber, formatPercentage } from "@/lib/utils/format";
+import { formatNumber } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 
 // ============ DISCOUNT CALCULATOR ============
@@ -22,7 +24,7 @@ export const discountCalculator: CalculatorDefinition = {
     { id: "discountPct", label: "Discount percentage", type: "percentage", unit: "%", placeholder: "20", defaultValue: 20, validation: { required: true, min: 0, max: 100 } },
   ],
 
-  calculate: (values) => {
+  calculate: (values, currency = DEFAULT_CURRENCY) => {
     const price = parseNumber(values.originalPrice) ?? 0;
     const pct = parseNumber(values.discountPct) ?? 0;
     const discount = (price * pct) / 100;
@@ -33,19 +35,19 @@ export const discountCalculator: CalculatorDefinition = {
         {
           id: "primary",
           values: [
-            { id: "salePrice", label: "SALE PRICE", value: `₹${formatNumber(salePrice, 0)}`, format: "text", primary: true, description: `after ${pct}% discount` },
+            { id: "salePrice", label: "SALE PRICE", value: salePrice, format: "currency", primary: true, description: `after ${pct}% discount` },
           ],
         },
         {
           id: "details",
           title: "Discount details",
           values: [
-            { id: "discount", label: "You save", value: `₹${formatNumber(discount, 0)}`, format: "text" },
-            { id: "original", label: "Original price", value: `₹${formatNumber(price, 0)}`, format: "text" },
+            { id: "discount", label: "You save", value: discount, format: "currency" },
+            { id: "original", label: "Original price", value: price, format: "currency" },
           ],
         },
       ],
-      interpretation: `With a ${pct}% discount on ₹${formatNumber(price, 0)}, you save ₹${formatNumber(discount, 0)} and pay ₹${formatNumber(salePrice, 0)}.`,
+      interpretation: `With a ${pct}% discount on ${formatMoney(price, currency)}, you save ${formatMoney(discount, currency)} and pay ${formatMoney(salePrice, currency)}.`,
     };
   },
 

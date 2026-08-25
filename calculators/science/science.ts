@@ -3,6 +3,8 @@
  */
 import type { CalculatorDefinition } from "@/lib/calculators/types";
 import { formatNumber } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 
 const fin = {
@@ -449,16 +451,16 @@ export const electricalEnergyCalculator: CalculatorDefinition = {
     { id: "days", label: "Days", type: "number", placeholder: "30", defaultValue: 30, validation: { required: true, min: 1 } },
     { id: "rate", label: "Rate per kWh", type: "currency", unit: "₹", placeholder: "8", defaultValue: 8, validation: { required: true, min: 0 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const power = parseNumber(v.power) ?? 0, hours = parseNumber(v.hours) ?? 0, days = parseNumber(v.days) ?? 30, rate = parseNumber(v.rate) ?? 0;
     const kwh = (power / 1000) * hours * days;
     const cost = kwh * rate;
     return {
       sections: [
         { id: "primary", values: [{ id: "kwh", label: "ENERGY USED", value: `${formatNumber(kwh, 2)} kWh`, format: "text", primary: true, description: `over ${days} days` }] },
-        { id: "details", title: "Cost", values: [{ id: "cost", label: "Estimated cost", value: `₹${formatNumber(cost, 2)}`, format: "text" }] },
+        { id: "details", title: "Cost", values: [{ id: "cost", label: "Estimated cost", value: cost, format: "currency" }] },
       ],
-      interpretation: `A ${power} W device running ${hours} hours/day for ${days} days uses ${formatNumber(kwh, 2)} kWh, costing about ₹${formatNumber(cost, 2)}.`,
+      interpretation: `A ${power} W device running ${hours} hours/day for ${days} days uses ${formatNumber(kwh, 2)} kWh, costing about ${formatMoney(cost, currency)}.`,
     };
   },
   content: {

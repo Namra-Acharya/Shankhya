@@ -4,7 +4,9 @@
  */
 
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatINR, formatNumber, roundTo } from "@/lib/utils/format";
+import { roundTo } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 import { calculateEMI } from "@/calculators/finance/emi";
 
@@ -55,7 +57,7 @@ export const loanCalculator: CalculatorDefinition = {
     },
   ],
 
-  calculate: (values) => {
+  calculate: (values, currency = DEFAULT_CURRENCY) => {
     const principal = parseNumber(values.principal) ?? 0;
     const rate = parseNumber(values.rate) ?? 0;
     const tenureYears = parseNumber(values.tenure) ?? 0;
@@ -75,7 +77,7 @@ export const loanCalculator: CalculatorDefinition = {
             {
               id: "monthlyPayment",
               label: "MONTHLY PAYMENT",
-              value: formatINR(roundTo(monthlyPayment)),
+              value: roundTo(monthlyPayment),
               format: "currency",
               primary: true,
               description: `per month for ${tenureMonths} months`,
@@ -86,9 +88,9 @@ export const loanCalculator: CalculatorDefinition = {
           id: "totals",
           title: "Loan summary",
           values: [
-            { id: "principal", label: "Principal", value: formatINR(roundTo(principal)), format: "currency" },
-            { id: "totalInterest", label: "Total interest", value: formatINR(roundTo(totalInterest)), format: "currency" },
-            { id: "totalPayment", label: "Total payment", value: formatINR(roundTo(totalPayment)), format: "currency" },
+            { id: "principal", label: "Principal", value: roundTo(principal), format: "currency" },
+            { id: "totalInterest", label: "Total interest", value: roundTo(totalInterest), format: "currency" },
+            { id: "totalPayment", label: "Total payment", value: roundTo(totalPayment), format: "currency" },
           ],
         },
       ],
@@ -100,7 +102,7 @@ export const loanCalculator: CalculatorDefinition = {
           { label: "Interest", value: roundTo(totalInterest, 0), color: "var(--muted)" },
         ],
       },
-      interpretation: `Your monthly payment will be ${formatINR(roundTo(monthlyPayment))}. Over ${tenureYears} years, you will pay ${formatINR(roundTo(totalInterest))} in interest, for a total of ${formatINR(roundTo(totalPayment))}.`,
+      interpretation: `Your monthly payment will be ${formatMoney(roundTo(monthlyPayment), currency)}. Over ${tenureYears} years, you will pay ${formatMoney(roundTo(totalInterest), currency)} in interest, for a total of ${formatMoney(roundTo(totalPayment), currency)}.`,
     };
   },
 

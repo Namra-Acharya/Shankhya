@@ -2,7 +2,9 @@
  * Finance Calculators - Mortgage, Auto Loan, Investment, Savings, Retirement, Credit Card, Debt, DTI, ROI, APR, Inflation, Tip, Sales Tax, Currency, PPF, CAGR, NPS, Gratuity, HRA, EPF, Income Tax India, Salary, Home/Car/Personal Loan EMI
  */
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatINR, roundTo } from "@/lib/utils/format";
+import { roundTo } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 import { calculateEMI } from "@/calculators/finance/emi";
 
@@ -49,17 +51,17 @@ export const mortgageCalculator: CalculatorDefinition = {
     { id: "rate", label: "Interest rate", type: "percentage", unit: "%", placeholder: "7.5", defaultValue: 7.5, validation: { required: true, min: 0.1, max: 20 } },
     { id: "years", label: "Loan term", type: "number", unit: "years", placeholder: "20", defaultValue: 20, validation: { required: true, min: 1, max: 40 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const price = parseNumber(v.homePrice) ?? 0, down = parseNumber(v.downPayment) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 20;
     const principal = Math.max(0, price - down), months = Math.round(years * 12);
     const emi = principal > 0 ? calculateEMI(principal, rate, months) : 0, totalPayment = emi * months, totalInterest = totalPayment - principal;
     return {
       sections: [
-        { id: "primary", values: [{ id: "monthly", label: "MONTHLY PAYMENT", value: formatINR(roundTo(emi)), format: "currency", primary: true, description: `for ${months} months` }] },
-        { id: "summary", title: "Mortgage summary", values: [{ id: "principal", label: "Loan amount", value: formatINR(roundTo(principal)), format: "currency" }, { id: "interest", label: "Total interest", value: formatINR(roundTo(totalInterest)), format: "currency" }, { id: "total", label: "Total payment", value: formatINR(roundTo(totalPayment)), format: "currency" }] },
+        { id: "primary", values: [{ id: "monthly", label: "MONTHLY PAYMENT", value: roundTo(emi), format: "currency", primary: true, description: `for ${months} months` }] },
+        { id: "summary", title: "Mortgage summary", values: [{ id: "principal", label: "Loan amount", value: roundTo(principal), format: "currency" }, { id: "interest", label: "Total interest", value: roundTo(totalInterest), format: "currency" }, { id: "total", label: "Total payment", value: roundTo(totalPayment), format: "currency" }] },
       ],
       chart: { type: "bar", title: "Principal vs Interest", data: [{ label: "Principal", value: roundTo(principal, 0), color: "var(--accent)" }, { label: "Interest", value: roundTo(totalInterest, 0), color: "var(--muted)" }] },
-      interpretation: `Your loan of ${formatINR(roundTo(principal))} costs ${formatINR(roundTo(emi))}/month. Total interest: ${formatINR(roundTo(totalInterest))}.`,
+      interpretation: `Your loan of ${formatMoney(roundTo(principal), currency)} costs ${formatMoney(roundTo(emi), currency)}/month. Total interest: ${formatMoney(roundTo(totalInterest), currency)}.`,
     };
   },
   content: {
@@ -153,17 +155,17 @@ export const autoLoanCalculator: CalculatorDefinition = {
     { id: "rate", label: "Interest rate", type: "percentage", unit: "%", placeholder: "9", defaultValue: 9, validation: { required: true, min: 0.1, max: 25 } },
     { id: "years", label: "Loan term", type: "number", unit: "years", placeholder: "5", defaultValue: 5, validation: { required: true, min: 1, max: 8 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const price = parseNumber(v.carPrice) ?? 0, down = parseNumber(v.downPayment) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 5;
     const principal = Math.max(0, price - down), months = Math.round(years * 12);
     const emi = principal > 0 ? calculateEMI(principal, rate, months) : 0, totalPayment = emi * months, totalInterest = totalPayment - principal;
     return {
       sections: [
-        { id: "primary", values: [{ id: "monthly", label: "MONTHLY PAYMENT", value: formatINR(roundTo(emi)), format: "currency", primary: true, description: `for ${months} months` }] },
-        { id: "summary", title: "Loan summary", values: [{ id: "principal", label: "Loan amount", value: formatINR(roundTo(principal)), format: "currency" }, { id: "interest", label: "Total interest", value: formatINR(roundTo(totalInterest)), format: "currency" }, { id: "total", label: "Total payment", value: formatINR(roundTo(totalPayment)), format: "currency" }] },
+        { id: "primary", values: [{ id: "monthly", label: "MONTHLY PAYMENT", value: roundTo(emi), format: "currency", primary: true, description: `for ${months} months` }] },
+        { id: "summary", title: "Loan summary", values: [{ id: "principal", label: "Loan amount", value: roundTo(principal), format: "currency" }, { id: "interest", label: "Total interest", value: roundTo(totalInterest), format: "currency" }, { id: "total", label: "Total payment", value: roundTo(totalPayment), format: "currency" }] },
       ],
       chart: { type: "bar", title: "Principal vs Interest", data: [{ label: "Principal", value: roundTo(principal, 0), color: "var(--accent)" }, { label: "Interest", value: roundTo(totalInterest, 0), color: "var(--muted)" }] },
-      interpretation: `Your car loan of ${formatINR(roundTo(principal))} costs ${formatINR(roundTo(emi))}/month. Total interest: ${formatINR(roundTo(totalInterest))}.`,
+      interpretation: `Your car loan of ${formatMoney(roundTo(principal), currency)} costs ${formatMoney(roundTo(emi), currency)}/month. Total interest: ${formatMoney(roundTo(totalInterest), currency)}.`,
     };
   },
   content: {
@@ -256,7 +258,7 @@ export const investmentCalculator: CalculatorDefinition = {
     { id: "rate", label: "Annual return", type: "percentage", unit: "%", placeholder: "10", defaultValue: 10, validation: { required: true, min: 0.1, max: 30 } },
     { id: "years", label: "Years", type: "number", unit: "years", placeholder: "10", defaultValue: 10, validation: { required: true, min: 1, max: 50 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const principal = parseNumber(v.principal) ?? 0, monthly = parseNumber(v.monthly) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 10;
     const mr = rate / 12 / 100, months = Math.round(years * 12);
     const pFV = principal * Math.pow(1 + mr, months);
@@ -264,10 +266,10 @@ export const investmentCalculator: CalculatorDefinition = {
     const totalFV = pFV + mFV, invested = principal + monthly * months, gain = totalFV - invested;
     return {
       sections: [
-        { id: "primary", values: [{ id: "fv", label: "FUTURE VALUE", value: formatINR(roundTo(totalFV)), format: "currency", primary: true, description: `after ${years} years` }] },
-        { id: "summary", title: "Investment summary", values: [{ id: "invested", label: "Total invested", value: formatINR(roundTo(invested)), format: "currency" }, { id: "gain", label: "Total gain", value: formatINR(roundTo(gain)), format: "currency" }] },
+        { id: "primary", values: [{ id: "fv", label: "FUTURE VALUE", value: roundTo(totalFV), format: "currency", primary: true, description: `after ${years} years` }] },
+        { id: "summary", title: "Investment summary", values: [{ id: "invested", label: "Total invested", value: roundTo(invested), format: "currency" }, { id: "gain", label: "Total gain", value: roundTo(gain), format: "currency" }] },
       ],
-      interpretation: `Investing ${formatINR(roundTo(principal))} plus ${formatINR(roundTo(monthly))} monthly at ${rate}% could grow to ${formatINR(roundTo(totalFV))}.`,
+      interpretation: `Investing ${formatMoney(roundTo(principal), currency)} plus ${formatMoney(roundTo(monthly), currency)} monthly at ${rate}% could grow to ${formatMoney(roundTo(totalFV), currency)}.`,
     };
   },
   content: {
@@ -364,7 +366,7 @@ export const savingsCalculator: CalculatorDefinition = {
     { id: "rate", label: "Interest rate", type: "percentage", unit: "%", placeholder: "6", defaultValue: 6, validation: { required: true, min: 0, max: 15 } },
     { id: "years", label: "Years", type: "number", unit: "years", placeholder: "10", defaultValue: 10, validation: { required: true, min: 1, max: 50 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const initial = parseNumber(v.initial) ?? 0, monthly = parseNumber(v.monthly) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 10;
     const mr = rate / 12 / 100, months = Math.round(years * 12);
     const iFV = initial * Math.pow(1 + mr, months);
@@ -372,10 +374,10 @@ export const savingsCalculator: CalculatorDefinition = {
     const totalFV = iFV + mFV, saved = initial + monthly * months, interest = totalFV - saved;
     return {
       sections: [
-        { id: "primary", values: [{ id: "fv", label: "TOTAL SAVINGS", value: formatINR(roundTo(totalFV)), format: "currency", primary: true, description: `after ${years} years` }] },
-        { id: "summary", title: "Savings summary", values: [{ id: "saved", label: "Amount saved", value: formatINR(roundTo(saved)), format: "currency" }, { id: "interest", label: "Interest earned", value: formatINR(roundTo(interest)), format: "currency" }] },
+        { id: "primary", values: [{ id: "fv", label: "TOTAL SAVINGS", value: roundTo(totalFV), format: "currency", primary: true, description: `after ${years} years` }] },
+        { id: "summary", title: "Savings summary", values: [{ id: "saved", label: "Amount saved", value: roundTo(saved), format: "currency" }, { id: "interest", label: "Interest earned", value: roundTo(interest), format: "currency" }] },
       ],
-      interpretation: `Saving ${formatINR(roundTo(initial))} plus ${formatINR(roundTo(monthly))} monthly at ${rate}% could grow to ${formatINR(roundTo(totalFV))}.`,
+      interpretation: `Saving ${formatMoney(roundTo(initial), currency)} plus ${formatMoney(roundTo(monthly), currency)} monthly at ${rate}% could grow to ${formatMoney(roundTo(totalFV), currency)}.`,
     };
   },
   content: {

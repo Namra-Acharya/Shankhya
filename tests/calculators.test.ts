@@ -4,6 +4,8 @@ import { getAllCalculators } from "@/lib/calculators/registry";
 import { validateCalculator } from "@/lib/utils/validation";
 import type { CalculatorInput, CalculatorValues } from "@/lib/calculators/types";
 import { expandInputs } from "@/lib/calculators/types";
+import { formatMoney } from "@/lib/currency/format";
+import { formatNumber, formatPercentage } from "@/lib/utils/format";
 
 /**
  * Builds a valid value for each input from its own definition.
@@ -92,10 +94,18 @@ describe("All calculators validate their auto-generated inputs", () => {
 
 describe("Known-value correctness checks", () => {
   const byId = Object.fromEntries(getAllCalculators().map((c) => [c.id, c]));
+  // Money values are stored as raw numbers; render them in INR for deterministic
+  // assertion on grouping, matching the historical behaviour of these checks.
   const primaryOf = (id: string, values: CalculatorValues) => {
-    const result = byId[id].calculate(values);
+    const result = byId[id].calculate(values, "INR");
     const section = result.sections.find((s) => s.values.some((v) => v.primary))!;
-    return String(section.values.find((v) => v.primary)!.value);
+    const primary = section.values.find((v) => v.primary)!;
+    // Some calculators still pre-format (e.g. attendance "84.0%") — keep as-is.
+    if (typeof primary.value === "string") return primary.value as string;
+    if (primary.format === "currency") return formatMoney(Number(primary.value), "INR");
+    if (primary.format === "percentage") return formatPercentage(Number(primary.value), 1);
+    if (primary.format === "number") return formatNumber(Number(primary.value), 2);
+    return String(primary.value);
   };
 
   it("SIP: ₹5,000/mo at 12% for 10 years ≈ ₹11,61,695", () => {

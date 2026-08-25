@@ -3,7 +3,9 @@
  */
 
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatINR, roundTo } from "@/lib/utils/format";
+import { roundTo } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 
 export function calculateFD(
@@ -76,7 +78,7 @@ export const fdCalculator: CalculatorDefinition = {
     },
   ],
 
-  calculate: (values) => {
+  calculate: (values, currency = DEFAULT_CURRENCY) => {
     const principal = parseNumber(values.principal) ?? 0;
     const rate = parseNumber(values.rate) ?? 0;
     const years = parseNumber(values.years) ?? 0;
@@ -99,7 +101,7 @@ export const fdCalculator: CalculatorDefinition = {
             {
               id: "maturityValue",
               label: "MATURITY VALUE",
-              value: formatINR(roundTo(maturityValue)),
+              value: roundTo(maturityValue),
               format: "currency",
               primary: true,
               description: `after ${years} years at ${rate}%`,
@@ -110,8 +112,8 @@ export const fdCalculator: CalculatorDefinition = {
           id: "breakdown",
           title: "FD breakdown",
           values: [
-            { id: "principal", label: "Deposit amount", value: formatINR(roundTo(principal)), format: "currency" },
-            { id: "interest", label: "Interest earned", value: formatINR(roundTo(interestEarned)), format: "currency" },
+            { id: "principal", label: "Deposit amount", value: roundTo(principal), format: "currency" },
+            { id: "interest", label: "Interest earned", value: roundTo(interestEarned), format: "currency" },
           ],
         },
       ],
@@ -120,7 +122,7 @@ export const fdCalculator: CalculatorDefinition = {
         title: "Growth over time",
         data: chartData,
       },
-      interpretation: `Your FD of ${formatINR(roundTo(principal))} will mature to approximately ${formatINR(roundTo(maturityValue))} after ${years} years, earning ${formatINR(roundTo(interestEarned))} in interest.`,
+      interpretation: `Your FD of ${formatMoney(roundTo(principal), currency)} will mature to approximately ${formatMoney(roundTo(maturityValue), currency)} after ${years} years, earning ${formatMoney(roundTo(interestEarned), currency)} in interest.`,
     };
   },
 

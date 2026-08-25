@@ -2,7 +2,9 @@
  * Finance Calculators - Retirement, Credit Card Payoff, Debt Payoff, DTI, ROI, APR, Inflation, Tip, Sales Tax, Currency Converter
  */
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatINR, formatNumber, roundTo } from "@/lib/utils/format";
+import { formatNumber, roundTo } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 
 const fin = {
@@ -48,7 +50,7 @@ export const retirementCalculator: CalculatorDefinition = {
     { id: "rate", label: "Annual return", type: "percentage", unit: "%", placeholder: "8", defaultValue: 8, validation: { required: true, min: 0, max: 20 } },
     { id: "years", label: "Years until retirement", type: "number", unit: "years", placeholder: "30", defaultValue: 30, validation: { required: true, min: 1, max: 60 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const current = parseNumber(v.current) ?? 0, monthly = parseNumber(v.monthly) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 30;
     const mr = rate / 12 / 100, months = Math.round(years * 12);
     const currentFV = current * Math.pow(1 + mr, months);
@@ -57,11 +59,11 @@ export const retirementCalculator: CalculatorDefinition = {
     const contributed = current + monthly * months;
     return {
       sections: [
-        { id: "primary", values: [{ id: "nestEgg", label: "ESTIMATED NEST EGG", value: formatINR(roundTo(total)), format: "currency", primary: true, description: `at retirement after ${years} years` }] },
-        { id: "summary", title: "Retirement summary", values: [{ id: "contributed", label: "Total contributed", value: formatINR(roundTo(contributed)), format: "currency" }, { id: "gain", label: "Investment gain", value: formatINR(roundTo(total - contributed)), format: "currency" }] },
+        { id: "primary", values: [{ id: "nestEgg", label: "ESTIMATED NEST EGG", value: roundTo(total), format: "currency", primary: true, description: `at retirement after ${years} years` }] },
+        { id: "summary", title: "Retirement summary", values: [{ id: "contributed", label: "Total contributed", value: roundTo(contributed), format: "currency" }, { id: "gain", label: "Investment gain", value: roundTo(total - contributed), format: "currency" }] },
       ],
       chart: { type: "bar", title: "Growth over time", data: [{ label: "Contributed", value: roundTo(contributed, 0), color: "var(--muted)" }, { label: "Growth", value: roundTo(total - contributed, 0), color: "var(--accent)" }] },
-      interpretation: `With ₹${formatINR(roundTo(current))} saved and ₹${formatINR(roundTo(monthly))} monthly at ${rate}%, you could have ₹${formatINR(roundTo(total))} in ${years} years.`,
+      interpretation: `With ₹${formatMoney(roundTo(current), currency)} saved and ₹${formatMoney(roundTo(monthly), currency)} monthly at ${rate}%, you could have ₹${formatMoney(roundTo(total), currency)} in ${years} years.`,
     };
   },
   content: {
@@ -155,7 +157,7 @@ export const creditCardPayoffCalculator: CalculatorDefinition = {
     { id: "april", label: "APR", type: "percentage", unit: "%", placeholder: "24", defaultValue: 24, validation: { required: true, min: 0, max: 50 } },
     { id: "payment", label: "Monthly payment", type: "currency", unit: "₹", placeholder: "3000", defaultValue: 3000, validation: { required: true, min: 10, max: 10000000 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const balance = parseNumber(v.balance) ?? 0, apr = parseNumber(v.april) ?? 0, payment = parseNumber(v.payment) ?? 0;
     const monthlyRate = apr / 12 / 100;
     let remaining = balance, months = 0, totalInterest = 0;
@@ -171,10 +173,10 @@ export const creditCardPayoffCalculator: CalculatorDefinition = {
     return {
       sections: [
         { id: "primary", values: [{ id: "months", label: "TIME TO PAY OFF", value: `${months} months`, format: "text", primary: true, description: `≈ ${years.toFixed(1)} years` }] },
-        { id: "summary", title: "Payoff summary", values: [{ id: "total", label: "Total paid", value: formatINR(roundTo(totalPaid)), format: "currency" }, { id: "interest", label: "Total interest", value: formatINR(roundTo(totalInterest)), format: "currency" }] },
+        { id: "summary", title: "Payoff summary", values: [{ id: "total", label: "Total paid", value: roundTo(totalPaid), format: "currency" }, { id: "interest", label: "Total interest", value: roundTo(totalInterest), format: "currency" }] },
       ],
       chart: { type: "bar", title: "Balance vs Interest", data: [{ label: "Balance", value: roundTo(balance, 0), color: "var(--accent)" }, { label: "Interest", value: roundTo(totalInterest, 0), color: "var(--muted)" }] },
-      interpretation: `Paying ${formatINR(roundTo(payment))} monthly against a balance of ${formatINR(roundTo(balance))} at ${apr}% APR would take ${months} months. Total interest: ${formatINR(roundTo(totalInterest))}.`,
+      interpretation: `Paying ${formatMoney(roundTo(payment), currency)} monthly against a balance of ${formatMoney(roundTo(balance), currency)} at ${apr}% APR would take ${months} months. Total interest: ${formatMoney(roundTo(totalInterest), currency)}.`,
     };
   },
   content: {
@@ -266,7 +268,7 @@ export const debtPayoffCalculator: CalculatorDefinition = {
     { id: "rate", label: "Interest rate", type: "percentage", unit: "%", placeholder: "12", defaultValue: 12, validation: { required: true, min: 0, max: 40 } },
     { id: "payment", label: "Monthly payment", type: "currency", unit: "₹", placeholder: "5000", defaultValue: 5000, validation: { required: true, min: 10, max: 10000000 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const balance = parseNumber(v.balance) ?? 0, rate = parseNumber(v.rate) ?? 0, payment = parseNumber(v.payment) ?? 0;
     const monthlyRate = rate / 12 / 100;
     let remaining = balance, months = 0, totalInterest = 0;
@@ -281,9 +283,9 @@ export const debtPayoffCalculator: CalculatorDefinition = {
     return {
       sections: [
         { id: "primary", values: [{ id: "months", label: "TIME TO PAY OFF", value: `${months} months`, format: "text", primary: true, description: `≈ ${(months / 12).toFixed(1)} years` }] },
-        { id: "summary", title: "Debt summary", values: [{ id: "total", label: "Total paid", value: formatINR(roundTo(totalPaid)), format: "currency" }, { id: "interest", label: "Total interest", value: formatINR(roundTo(totalInterest)), format: "currency" }] },
+        { id: "summary", title: "Debt summary", values: [{ id: "total", label: "Total paid", value: roundTo(totalPaid), format: "currency" }, { id: "interest", label: "Total interest", value: roundTo(totalInterest), format: "currency" }] },
       ],
-      interpretation: `Paying ${formatINR(roundTo(payment))} monthly against ${formatINR(roundTo(balance))} at ${rate}% would take ${months} months and cost ${formatINR(roundTo(totalInterest))} in interest.`,
+      interpretation: `Paying ${formatMoney(roundTo(payment), currency)} monthly against ${formatMoney(roundTo(balance), currency)} at ${rate}% would take ${months} months and cost ${formatMoney(roundTo(totalInterest), currency)} in interest.`,
     };
   },
   content: {
@@ -379,7 +381,7 @@ export const dtiCalculator: CalculatorDefinition = {
     return {
       sections: [
         { id: "primary", values: [{ id: "dti", label: "DEBT-TO-INCOME RATIO", value: `${dti.toFixed(1)}%`, format: "text", primary: true, description: `${rating} - lenders generally prefer below 36%` }] },
-        { id: "details", title: "Details", values: [{ id: "debt", label: "Monthly debt", value: formatINR(roundTo(debt)), format: "currency" }, { id: "income", label: "Monthly income", value: formatINR(roundTo(income)), format: "currency" }] },
+        { id: "details", title: "Details", values: [{ id: "debt", label: "Monthly debt", value: roundTo(debt), format: "currency" }, { id: "income", label: "Monthly income", value: roundTo(income), format: "currency" }] },
       ],
       interpretation: `Your DTI is ${dti.toFixed(1)}%. This is considered ${rating.toLowerCase()} for lenders.`,
     };
@@ -470,7 +472,7 @@ export const roiCalculator: CalculatorDefinition = {
     { id: "returns", label: "Final value", type: "currency", unit: "₹", placeholder: "75000", defaultValue: 75000, validation: { required: true, min: 1, max: 100000000 } },
     { id: "years", label: "Years", type: "number", unit: "years", placeholder: "5", defaultValue: 5, validation: { required: true, min: 1, max: 50 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const investment = parseNumber(v.investment) ?? 0, returns = parseNumber(v.returns) ?? 0, years = parseNumber(v.years) ?? 5;
     const gain = returns - investment;
     const roi = investment > 0 ? (gain / investment) * 100 : 0;
@@ -478,9 +480,9 @@ export const roiCalculator: CalculatorDefinition = {
     return {
       sections: [
         { id: "primary", values: [{ id: "roi", label: "RETURN ON INVESTMENT", value: `${roi.toFixed(1)}%`, format: "text", primary: true, description: `over ${years} years` }] },
-        { id: "details", title: "ROI details", values: [{ id: "gain", label: "Net gain", value: formatINR(roundTo(gain)), format: "currency" }, { id: "annual", label: "Annualized ROI", value: `${annualized.toFixed(1)}%`, format: "text" }] },
+        { id: "details", title: "ROI details", values: [{ id: "gain", label: "Net gain", value: roundTo(gain), format: "currency" }, { id: "annual", label: "Annualized ROI", value: `${annualized.toFixed(1)}%`, format: "text" }] },
       ],
-      interpretation: `Your investment of ${formatINR(roundTo(investment))} grew to ${formatINR(roundTo(returns))}, giving an ROI of ${roi.toFixed(1)}% over ${years} years.`,
+      interpretation: `Your investment of ${formatMoney(roundTo(investment), currency)} grew to ${formatMoney(roundTo(returns), currency)}, giving an ROI of ${roi.toFixed(1)}% over ${years} years.`,
     };
   },
   content: {
@@ -569,7 +571,7 @@ export const aprCalculator: CalculatorDefinition = {
     { id: "rate", label: "Interest rate", type: "percentage", unit: "%", placeholder: "10", defaultValue: 10, validation: { required: true, min: 0.1, max: 40 } },
     { id: "years", label: "Term", type: "number", unit: "years", placeholder: "5", defaultValue: 5, validation: { required: true, min: 1, max: 30 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const principal = parseNumber(v.principal) ?? 0, fees = parseNumber(v.fees) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 5;
     const months = Math.round(years * 12);
     const mr = rate / 12 / 100;
@@ -581,9 +583,9 @@ export const aprCalculator: CalculatorDefinition = {
     return {
       sections: [
         { id: "primary", values: [{ id: "apr", label: "ANNUAL PERCENTAGE RATE", value: `${apr.toFixed(1)}%`, format: "text", primary: true, description: `including fees` }] },
-        { id: "details", title: "APR details", values: [{ id: "monthly", label: "Monthly payment", value: formatINR(roundTo(emi)), format: "currency" }, { id: "total", label: "Total payments", value: formatINR(roundTo(totalPayments)), format: "currency" }] },
+        { id: "details", title: "APR details", values: [{ id: "monthly", label: "Monthly payment", value: roundTo(emi), format: "currency" }, { id: "total", label: "Total payments", value: roundTo(totalPayments), format: "currency" }] },
       ],
-      interpretation: `Including ${formatINR(roundTo(fees))} in fees, the effective APR is ${apr.toFixed(1)}% on your ${formatINR(roundTo(principal))} loan.`,
+      interpretation: `Including ${formatMoney(roundTo(fees), currency)} in fees, the effective APR is ${apr.toFixed(1)}% on your ${formatMoney(roundTo(principal), currency)} loan.`,
     };
   },
   content: {
@@ -673,17 +675,17 @@ export const inflationCalculator: CalculatorDefinition = {
     { id: "rate", label: "Inflation rate", type: "percentage", unit: "%", placeholder: "6", defaultValue: 6, validation: { required: true, min: 0, max: 20 } },
     { id: "years", label: "Years", type: "number", unit: "years", placeholder: "10", defaultValue: 10, validation: { required: true, min: 1, max: 50 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const amount = parseNumber(v.amount) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 10;
     const futureValue = amount * Math.pow(1 + rate / 100, years);
     const loss = futureValue - amount;
     const purchasingPower = amount / Math.pow(1 + rate / 100, years);
     return {
       sections: [
-        { id: "primary", values: [{ id: "future", label: "FUTURE VALUE", value: formatINR(roundTo(futureValue)), format: "currency", primary: true, description: `${amount.toLocaleString("en-IN")} at ${rate}% inflation in ${years} years` }] },
-        { id: "details", title: "Inflation details", values: [{ id: "loss", label: "Increase in price", value: formatINR(roundTo(loss)), format: "currency" }, { id: "pp", label: "Purchasing power today", value: formatINR(roundTo(purchasingPower)), format: "currency" }] },
+        { id: "primary", values: [{ id: "future", label: "FUTURE VALUE", value: roundTo(futureValue), format: "currency", primary: true, description: `${amount.toLocaleString("en-IN")} at ${rate}% inflation in ${years} years` }] },
+        { id: "details", title: "Inflation details", values: [{ id: "loss", label: "Increase in price", value: roundTo(loss), format: "currency" }, { id: "pp", label: "Purchasing power today", value: roundTo(purchasingPower), format: "currency" }] },
       ],
-      interpretation: `Due to ${rate}% annual inflation, ${formatINR(roundTo(amount))} today would be worth ${formatINR(roundTo(purchasingPower))} in ${years} years' purchasing power.`,
+      interpretation: `Due to ${rate}% annual inflation, ${formatMoney(roundTo(amount), currency)} today would be worth ${formatMoney(roundTo(purchasingPower), currency)} in ${years} years' purchasing power.`,
     };
   },
   content: {
@@ -771,17 +773,17 @@ export const tipCalculator: CalculatorDefinition = {
     { id: "tipPct", label: "Tip percentage", type: "percentage", unit: "%", placeholder: "10", defaultValue: 10, validation: { required: true, min: 0, max: 100 } },
     { id: "people", label: "Number of people", type: "number", placeholder: "2", defaultValue: 2, validation: { required: true, min: 1, max: 100 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const bill = parseNumber(v.bill) ?? 0, tipPct = parseNumber(v.tipPct) ?? 0, people = Math.max(1, parseNumber(v.people) ?? 2);
     const tip = (bill * tipPct) / 100;
     const total = bill + tip;
     const perPerson = total / people;
     return {
       sections: [
-        { id: "primary", values: [{ id: "total", label: "TOTAL TO PAY", value: formatINR(roundTo(total)), format: "currency", primary: true, description: `including ${tipPct}% tip` }] },
-        { id: "details", title: "Split details", values: [{ id: "tip", label: "Tip amount", value: formatINR(roundTo(tip)), format: "currency" }, { id: "per", label: "Per person", value: formatINR(roundTo(perPerson)), format: "currency" }] },
+        { id: "primary", values: [{ id: "total", label: "TOTAL TO PAY", value: roundTo(total), format: "currency", primary: true, description: `including ${tipPct}% tip` }] },
+        { id: "details", title: "Split details", values: [{ id: "tip", label: "Tip amount", value: roundTo(tip), format: "currency" }, { id: "per", label: "Per person", value: roundTo(perPerson), format: "currency" }] },
       ],
-      interpretation: `A ${tipPct}% tip on a ${formatINR(roundTo(bill))} bill is ${formatINR(roundTo(tip))}. Total: ${formatINR(roundTo(total))}. Each of ${people} pays ${formatINR(roundTo(perPerson))}.`,
+      interpretation: `A ${tipPct}% tip on a ${formatMoney(roundTo(bill), currency)} bill is ${formatMoney(roundTo(tip), currency)}. Total: ${formatMoney(roundTo(total), currency)}. Each of ${people} pays ${formatMoney(roundTo(perPerson), currency)}.`,
     };
   },
   content: {
@@ -868,16 +870,16 @@ export const salesTaxCalculator: CalculatorDefinition = {
     { id: "price", label: "Price before tax", type: "currency", unit: "₹", placeholder: "1000", defaultValue: 1000, validation: { required: true, min: 0, max: 10000000 } },
     { id: "rate", label: "Tax rate", type: "percentage", unit: "%", placeholder: "18", defaultValue: 18, validation: { required: true, min: 0, max: 50 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const price = parseNumber(v.price) ?? 0, rate = parseNumber(v.rate) ?? 0;
     const tax = (price * rate) / 100;
     const total = price + tax;
     return {
       sections: [
-        { id: "primary", values: [{ id: "total", label: "PRICE AFTER TAX", value: formatINR(roundTo(total)), format: "currency", primary: true, description: `including ${rate}% tax` }] },
-        { id: "details", title: "Tax details", values: [{ id: "tax", label: "Tax amount", value: formatINR(roundTo(tax)), format: "currency" }, { id: "price", label: "Price before tax", value: formatINR(roundTo(price)), format: "currency" }] },
+        { id: "primary", values: [{ id: "total", label: "PRICE AFTER TAX", value: roundTo(total), format: "currency", primary: true, description: `including ${rate}% tax` }] },
+        { id: "details", title: "Tax details", values: [{ id: "tax", label: "Tax amount", value: roundTo(tax), format: "currency" }, { id: "price", label: "Price before tax", value: roundTo(price), format: "currency" }] },
       ],
-      interpretation: `The ${rate}% tax on ${formatINR(roundTo(price))} is ${formatINR(roundTo(tax))}, making the total ${formatINR(roundTo(total))}.`,
+      interpretation: `The ${rate}% tax on ${formatMoney(roundTo(price), currency)} is ${formatMoney(roundTo(tax), currency)}, making the total ${formatMoney(roundTo(total), currency)}.`,
     };
   },
   content: {

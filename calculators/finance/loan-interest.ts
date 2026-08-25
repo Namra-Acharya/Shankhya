@@ -3,7 +3,9 @@
  */
 
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatINR, roundTo } from "@/lib/utils/format";
+import { roundTo } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 import { calculateEMI } from "@/calculators/finance/emi";
 
@@ -53,7 +55,7 @@ export const loanInterestCalculator: CalculatorDefinition = {
     },
   ],
 
-  calculate: (values) => {
+  calculate: (values, currency = DEFAULT_CURRENCY) => {
     const principal = parseNumber(values.principal) ?? 0;
     const rate = parseNumber(values.rate) ?? 0;
     const tenureYears = parseNumber(values.tenure) ?? 0;
@@ -74,7 +76,7 @@ export const loanInterestCalculator: CalculatorDefinition = {
             {
               id: "totalInterest",
               label: "TOTAL INTEREST",
-              value: formatINR(roundTo(totalInterest)),
+              value: roundTo(totalInterest),
               format: "currency",
               primary: true,
               description: `over ${tenureYears} years at ${rate}%`,
@@ -85,8 +87,8 @@ export const loanInterestCalculator: CalculatorDefinition = {
           id: "breakdown",
           title: "Loan breakdown",
           values: [
-            { id: "principal", label: "Principal", value: formatINR(roundTo(principal)), format: "currency" },
-            { id: "totalPayment", label: "Total payment", value: formatINR(roundTo(totalPayment)), format: "currency" },
+            { id: "principal", label: "Principal", value: roundTo(principal), format: "currency" },
+            { id: "totalPayment", label: "Total payment", value: roundTo(totalPayment), format: "currency" },
             { id: "interestPct", label: "Interest share", value: `${roundTo(interestPercentage, 1)}%`, format: "text" },
           ],
         },
@@ -99,7 +101,7 @@ export const loanInterestCalculator: CalculatorDefinition = {
           { label: "Interest", value: roundTo(totalInterest, 0), color: "var(--muted)" },
         ],
       },
-      interpretation: `You will pay ${formatINR(roundTo(totalInterest))} in interest on a loan of ${formatINR(roundTo(principal))} at ${rate}% for ${tenureYears} years. The total payment will be ${formatINR(roundTo(totalPayment))}.`,
+      interpretation: `You will pay ${formatMoney(roundTo(totalInterest), currency)} in interest on a loan of ${formatMoney(roundTo(principal), currency)} at ${rate}% for ${tenureYears} years. The total payment will be ${formatMoney(roundTo(totalPayment), currency)}.`,
     };
   },
 

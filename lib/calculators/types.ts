@@ -144,6 +144,10 @@ export interface ChartConfig {
   min?: number;
   max?: number;
   unit?: string;
+  /** If true, this chart shows monetary values — labels use the active currency symbol */
+  money?: boolean;
+  /** Gauge: accessible label override */
+  ariaLabel?: string;
   /** Timeline: milestones */
   milestones?: { label: string; date?: string; value?: number }[];
   /** Geometry: shape */
@@ -167,6 +171,8 @@ export interface CalculatorResult {
   charts?: ChartConfig[];
   /** Plain-language interpretation of the result */
   interpretation?: string;
+  /** ISO 4217 code of the currency used for money-formatted text in this result */
+  currency?: string;
 }
 
 export interface CalculatorContent {
@@ -229,7 +235,10 @@ export interface CalculatorDefinition {
   /** Category accent color key */
   accent: string;
   inputs: CalculatorInput[];
-  calculate: (values: Record<string, string | number | boolean>) => CalculatorResult;
+  calculate: (
+    values: Record<string, string | number | boolean>,
+    currency?: string
+  ) => CalculatorResult;
   content: CalculatorContent;
   relatedCalculators: string[];
   seo: CalculatorSEO;

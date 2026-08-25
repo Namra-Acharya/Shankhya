@@ -3,7 +3,9 @@
  */
 
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatINR, formatNumber, roundTo } from "@/lib/utils/format";
+import { roundTo } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 
 export function calculateCompoundInterest(
@@ -82,7 +84,7 @@ export const compoundInterestCalculator: CalculatorDefinition = {
     },
   ],
 
-  calculate: (values) => {
+  calculate: (values, currency = DEFAULT_CURRENCY) => {
     const principal = parseNumber(values.principal) ?? 0;
     const rate = parseNumber(values.rate) ?? 0;
     const years = parseNumber(values.years) ?? 0;
@@ -104,7 +106,7 @@ export const compoundInterestCalculator: CalculatorDefinition = {
             {
               id: "amount",
               label: "FUTURE VALUE",
-              value: formatINR(roundTo(amount)),
+              value: roundTo(amount),
               format: "currency",
               primary: true,
               description: `after ${years} years at ${rate}% compounded ${compoundsPerYear}× per year`,
@@ -115,13 +117,13 @@ export const compoundInterestCalculator: CalculatorDefinition = {
           id: "breakdown",
           title: "Growth breakdown",
           values: [
-            { id: "principal", label: "Principal", value: formatINR(roundTo(principal)), format: "currency" },
-            { id: "interest", label: "Interest earned", value: formatINR(roundTo(interest)), format: "currency" },
+            { id: "principal", label: "Principal", value: roundTo(principal), format: "currency" },
+            { id: "interest", label: "Interest earned", value: roundTo(interest), format: "currency" },
           ],
         },
       ],
       chart: { type: "bar", title: "Growth over time", data: chartData },
-      interpretation: `Your ${formatINR(roundTo(principal))} will grow to approximately ${formatINR(roundTo(amount))} after ${years} years. You will earn ${formatINR(roundTo(interest))} in interest.`,
+      interpretation: `Your ${formatMoney(roundTo(principal), currency)} will grow to approximately ${formatMoney(roundTo(amount), currency)} after ${years} years. You will earn ${formatMoney(roundTo(interest), currency)} in interest.`,
     };
   },
 

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { calculateEMI, emiCalculator } from "@/calculators/finance/emi";
 import { ageCalculator } from "@/calculators/date-time/age";
 import { validateCalculator } from "@/lib/utils/validation";
+import { formatMoney } from "@/lib/currency/format";
 
 describe("calculateEMI", () => {
   it("calculates standard EMI correctly", () => {
@@ -57,7 +58,9 @@ describe("EMI Calculator integration", () => {
     expect(primarySection).toBeDefined();
     const primary = primarySection!.values.find((v) => v.primary);
     expect(primary).toBeDefined();
-    expect(primary!.value).toContain("₹");
+    // Calculated EMI is a raw number; formatting in INR shows the currency symbol.
+    expect(formatMoney(Number(primary!.value), "INR")).toContain("₹");
+    expect(Number(primary!.value)).toBeCloseTo(4339, 0);
   });
 
   it("includes loan summary", () => {

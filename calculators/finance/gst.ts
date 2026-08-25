@@ -3,7 +3,9 @@
  */
 
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatINR, roundTo } from "@/lib/utils/format";
+import { roundTo } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 
 export const gstCalculator: CalculatorDefinition = {
@@ -53,7 +55,7 @@ export const gstCalculator: CalculatorDefinition = {
     },
   ],
 
-  calculate: (values) => {
+  calculate: (values, currency = DEFAULT_CURRENCY) => {
     const amount = parseNumber(values.amount) ?? 0;
     const rate = parseNumber(values.rate) ?? 0;
     const type = String(values.type ?? "exclusive");
@@ -80,7 +82,7 @@ export const gstCalculator: CalculatorDefinition = {
             {
               id: "gstAmount",
               label: "GST AMOUNT",
-              value: formatINR(roundTo(gstAmount)),
+              value: roundTo(gstAmount),
               format: "currency",
               primary: true,
               description: `at ${rate}% GST`,
@@ -91,12 +93,12 @@ export const gstCalculator: CalculatorDefinition = {
           id: "breakdown",
           title: "Price breakdown",
           values: [
-            { id: "base", label: "Base amount", value: formatINR(roundTo(baseAmount)), format: "currency" },
-            { id: "total", label: "Total amount", value: formatINR(roundTo(totalAmount)), format: "currency" },
+            { id: "base", label: "Base amount", value: roundTo(baseAmount), format: "currency" },
+            { id: "total", label: "Total amount", value: roundTo(totalAmount), format: "currency" },
           ],
         },
       ],
-      interpretation: `The GST amount is ${formatINR(roundTo(gstAmount))} at ${rate}%. The base amount is ${formatINR(roundTo(baseAmount))} and the total including GST is ${formatINR(roundTo(totalAmount))}.`,
+      interpretation: `The GST amount is ${formatMoney(roundTo(gstAmount), currency)} at ${rate}%. The base amount is ${formatMoney(roundTo(baseAmount), currency)} and the total including GST is ${formatMoney(roundTo(totalAmount), currency)}.`,
     };
   },
 

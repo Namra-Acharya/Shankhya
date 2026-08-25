@@ -3,7 +3,9 @@
  */
 
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatINR, roundTo } from "@/lib/utils/format";
+import { roundTo } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 
 export function calculateRD(
@@ -72,7 +74,7 @@ export const rdCalculator: CalculatorDefinition = {
     },
   ],
 
-  calculate: (values) => {
+  calculate: (values, currency = DEFAULT_CURRENCY) => {
     const monthlyDeposit = parseNumber(values.monthlyDeposit) ?? 0;
     const rate = parseNumber(values.rate) ?? 0;
     const years = parseNumber(values.years) ?? 0;
@@ -94,7 +96,7 @@ export const rdCalculator: CalculatorDefinition = {
             {
               id: "maturityValue",
               label: "MATURITY VALUE",
-              value: formatINR(roundTo(maturityValue)),
+              value: roundTo(maturityValue),
               format: "currency",
               primary: true,
               description: `after ${years} years of ₹${monthlyDeposit.toLocaleString("en-IN")} monthly deposits`,
@@ -105,8 +107,8 @@ export const rdCalculator: CalculatorDefinition = {
           id: "breakdown",
           title: "RD breakdown",
           values: [
-            { id: "invested", label: "Total deposited", value: formatINR(roundTo(invested)), format: "currency" },
-            { id: "interest", label: "Interest earned", value: formatINR(roundTo(interestEarned)), format: "currency" },
+            { id: "invested", label: "Total deposited", value: roundTo(invested), format: "currency" },
+            { id: "interest", label: "Interest earned", value: roundTo(interestEarned), format: "currency" },
           ],
         },
       ],
@@ -115,7 +117,7 @@ export const rdCalculator: CalculatorDefinition = {
         title: "Growth over time",
         data: chartData,
       },
-      interpretation: `By depositing ${formatINR(roundTo(monthlyDeposit))} every month for ${years} years, your RD will mature to approximately ${formatINR(roundTo(maturityValue))}. You will have deposited ${formatINR(roundTo(invested))} and earned ${formatINR(roundTo(interestEarned))} in interest.`,
+      interpretation: `By depositing ${formatMoney(roundTo(monthlyDeposit), currency)} every month for ${years} years, your RD will mature to approximately ${formatMoney(roundTo(maturityValue), currency)}. You will have deposited ${formatMoney(roundTo(invested), currency)} and earned ${formatMoney(roundTo(interestEarned), currency)} in interest.`,
     };
   },
 

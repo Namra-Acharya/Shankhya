@@ -19,7 +19,7 @@ interface CalculatorFormProps {
 
 export function CalculatorForm({ slug }: CalculatorFormProps) {
   const calculator = useMemo(() => getClientCalculator(slug), [slug]);
-  const { symbol: currencySymbol } = useCurrency();
+  const { symbol: currencySymbol, currency, setCurrency: setGlobalCurrency } = useCurrency();
   const [values, setValues] = useState<CalculatorValues>(() =>
     getDefaultValues(calculator?.inputs ?? [])
   );
@@ -32,6 +32,10 @@ export function CalculatorForm({ slug }: CalculatorFormProps) {
     () => !!calculator?.inputs.some((input) => input.type === "currency"),
     [calculator]
   );
+
+  // Calculators that recompute live as the user types (no Calculate press required).
+  const isLiveReactive =
+    calculator?.id === "bmi" || calculator?.id === "age" || calculator?.id === "date-difference";
 
   const visibleInputs = useMemo(() => {
     if (!calculator) return [];
@@ -48,17 +52,35 @@ export function CalculatorForm({ slug }: CalculatorFormProps) {
     });
   }, [calculator, values]);
 
-  const handleChange = useCallback((id: string, value: string | number | boolean) => {
-    setValues((prev) => ({ ...prev, [id]: value }));
-    setErrors((prev) => {
-      if (!prev[id]) return prev;
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-    setResult(null);
-    setHasCalculated(false);
-  }, []);
+  const handleChange = useCallback(
+    (id: string, value: string | number | boolean) => {
+      const nextValues = { ...values, [id]: value };
+      setValues(nextValues);
+      setErrors((prev) => {
+        if (!prev[id]) return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+
+      // Live-reactive calculators update as the user types; others require Calculate.
+      if (!calculator || !isLiveReactive) {
+        setResult(null);
+        setHasCalculated(false);
+        return;
+      }
+
+      const validationErrors = validateCalculator(calculator.inputs, nextValues);
+      if (validationErrors.length > 0) {
+        setResult(null);
+        setHasCalculated(true);
+        return;
+      }
+      setResult(calculator.calculate(nextValues, currency));
+      setHasCalculated(true);
+    },
+    [values, calculator, currency, isLiveReactive]
+  );
 
   const handleCalculate = useCallback(() => {
     if (!calculator) return;
@@ -76,10 +98,24 @@ export function CalculatorForm({ slug }: CalculatorFormProps) {
     }
 
     setErrors({});
-    const calcResult = calculator.calculate(values);
+    const calcResult = calculator.calculate(values, currency);
     setResult(calcResult);
     setHasCalculated(true);
-  }, [calculator, values]);
+  }, [calculator, values, currency]);
+
+  // Currency selector onChange: persist the new currency AND immediately
+  // re-run an existing result so money-formatted output (interpretation,
+  // chart labels) adopts it without another Calculate press.
+  const handleCurrencyChange = useCallback(
+    (code: string) => {
+      setGlobalCurrency(code);
+      if (!calculator || !hasCalculated) return;
+      const validationErrors = validateCalculator(calculator.inputs, values);
+      if (validationErrors.length > 0) return;
+      setResult(calculator.calculate(values, code));
+    },
+    [calculator, hasCalculated, values, setGlobalCurrency]
+  );
 
   const handleReset = useCallback(() => {
     if (!calculator) return;
@@ -151,7 +187,7 @@ export function CalculatorForm({ slug }: CalculatorFormProps) {
       <div className="p-4 sm:p-6" onKeyDown={handleKeyDown}>
         {hasMoney && (
           <div className="mb-5 max-w-xs">
-            <CurrencySelector label="Currency" />
+            <CurrencySelector label="Currency" onChange={handleCurrencyChange} />
           </div>
         )}
         <div className="grid gap-5 sm:grid-cols-2">
@@ -182,7 +218,7 @@ export function CalculatorForm({ slug }: CalculatorFormProps) {
 
       {result && (
         <div className="border-t border-border bg-surface-secondary/50 px-4 py-6 sm:px-6 dark:border-dark-border dark:bg-dark-secondary/50">
-          <CalculatorResultView result={result} />
+          <CalculatorResultView result={result} money={hasMoney} />
         </div>
       )}
 

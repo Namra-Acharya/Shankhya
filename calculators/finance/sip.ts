@@ -4,7 +4,9 @@
  */
 
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatINR, formatNumber, roundTo } from "@/lib/utils/format";
+import { formatNumber, roundTo } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 
 export function calculateSIP(
@@ -77,7 +79,7 @@ export const sipCalculator: CalculatorDefinition = {
     },
   ],
 
-  calculate: (values) => {
+  calculate: (values, currency = DEFAULT_CURRENCY) => {
     const monthlyInvestment = parseNumber(values.monthlyInvestment) ?? 0;
     const annualReturn = parseNumber(values.annualReturn) ?? 0;
     const years = parseNumber(values.years) ?? 0;
@@ -107,7 +109,7 @@ export const sipCalculator: CalculatorDefinition = {
             {
               id: "futureValue",
               label: "ESTIMATED FUTURE VALUE",
-              value: formatINR(roundTo(futureValue)),
+              value: roundTo(futureValue),
               format: "currency",
               primary: true,
               description: `after ${years} years of investing ₹${formatNumber(monthlyInvestment, 0)} per month`,
@@ -118,8 +120,8 @@ export const sipCalculator: CalculatorDefinition = {
           id: "breakdown",
           title: "Investment breakdown",
           values: [
-            { id: "invested", label: "Total invested", value: formatINR(roundTo(invested)), format: "currency" },
-            { id: "wealthGain", label: "Wealth gain", value: formatINR(roundTo(wealthGain)), format: "currency" },
+            { id: "invested", label: "Total invested", value: roundTo(invested), format: "currency" },
+            { id: "wealthGain", label: "Wealth gain", value: roundTo(wealthGain), format: "currency" },
           ],
         },
       ],
@@ -128,7 +130,7 @@ export const sipCalculator: CalculatorDefinition = {
         title: "Growth over time",
         data: chartData,
       },
-      interpretation: `By investing ${formatINR(roundTo(monthlyInvestment))} every month for ${years} years at ${annualReturn}% annual return, you could accumulate approximately ${formatINR(roundTo(futureValue))}. Your total investment would be ${formatINR(roundTo(invested))}, with a wealth gain of ${formatINR(roundTo(wealthGain))}.`,
+      interpretation: `By investing ${formatMoney(roundTo(monthlyInvestment), currency)} every month for ${years} years at ${annualReturn}% annual return, you could accumulate approximately ${formatMoney(roundTo(futureValue), currency)}. Your total investment would be ${formatMoney(roundTo(invested), currency)}, with a wealth gain of ${formatMoney(roundTo(wealthGain), currency)}.`,
     };
   },
 

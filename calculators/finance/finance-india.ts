@@ -3,7 +3,9 @@
  * Covers: PPF, CAGR, NPS, Gratuity, HRA, EPF, Income Tax India, Salary/Take-Home, Home/Car/Personal Loan EMI
  */
 import type { CalculatorDefinition } from "@/lib/calculators/types";
-import { formatINR, roundTo } from "@/lib/utils/format";
+import { roundTo } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/currency/format";
+import { DEFAULT_CURRENCY } from "@/lib/currency/currencies";
 import { parseNumber } from "@/lib/utils/validation";
 import { calculateEMI } from "@/calculators/finance/emi";
 
@@ -49,7 +51,7 @@ export const ppfCalculator: CalculatorDefinition = {
     { id: "rate", label: "PPF rate", type: "percentage", unit: "%", placeholder: "7.1", defaultValue: 7.1, validation: { required: true, min: 0, max: 15 } },
     { id: "years", label: "Years", type: "number", unit: "years", placeholder: "15", defaultValue: 15, validation: { required: true, min: 1, max: 50 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const monthly = parseNumber(v.monthly) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 15;
     const mr = rate / 12 / 100, months = Math.round(years * 12);
     const invested = monthly * months;
@@ -57,10 +59,10 @@ export const ppfCalculator: CalculatorDefinition = {
     const interest = maturity - invested;
     return {
       sections: [
-        { id: "primary", values: [{ id: "maturity", label: "MATURITY VALUE", value: formatINR(roundTo(maturity)), format: "currency", primary: true, description: `after ${years} years at ${rate}%` }] },
-        { id: "summary", title: "PPF summary", values: [{ id: "invested", label: "Total deposited", value: formatINR(roundTo(invested)), format: "currency" }, { id: "interest", label: "Interest earned", value: formatINR(roundTo(interest)), format: "currency" }] },
+        { id: "primary", values: [{ id: "maturity", label: "MATURITY VALUE", value: roundTo(maturity), format: "currency", primary: true, description: `after ${years} years at ${rate}%` }] },
+        { id: "summary", title: "PPF summary", values: [{ id: "invested", label: "Total deposited", value: roundTo(invested), format: "currency" }, { id: "interest", label: "Interest earned", value: roundTo(interest), format: "currency" }] },
       ],
-      interpretation: `Depositing ${formatINR(roundTo(monthly))} monthly in PPF at ${rate}% for ${years} years can grow to ${formatINR(roundTo(maturity))}.`,
+      interpretation: `Depositing ${formatMoney(roundTo(monthly), currency)} monthly in PPF at ${rate}% for ${years} years can grow to ${formatMoney(roundTo(maturity), currency)}.`,
     };
   },
   content: {
@@ -151,7 +153,7 @@ export const cagrCalculator: CalculatorDefinition = {
     { id: "end", label: "Ending value", type: "currency", unit: "₹", placeholder: "20000", defaultValue: 20000, validation: { required: true, min: 1, max: 100000000 } },
     { id: "years", label: "Years", type: "number", unit: "years", placeholder: "5", defaultValue: 5, validation: { required: true, min: 1, max: 50 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const begin = parseNumber(v.begin) ?? 0, end = parseNumber(v.end) ?? 0, years = parseNumber(v.years) ?? 5;
     const cagr = begin > 0 ? (Math.pow(end / begin, 1 / years) - 1) * 100 : 0;
     const absolute = begin > 0 ? ((end - begin) / begin) * 100 : 0;
@@ -160,7 +162,7 @@ export const cagrCalculator: CalculatorDefinition = {
         { id: "primary", values: [{ id: "cagr", label: "COMPOUND ANNUAL GROWTH RATE", value: `${cagr.toFixed(2)}%`, format: "text", primary: true, description: `over ${years} years` }] },
         { id: "details", title: "Growth details", values: [{ id: "absolute", label: "Total return", value: `${absolute.toFixed(1)}%`, format: "text" }] },
       ],
-      interpretation: `Your investment grew from ${formatINR(roundTo(begin))} to ${formatINR(roundTo(end))} over ${years} years, a CAGR of ${cagr.toFixed(2)}%.`,
+      interpretation: `Your investment grew from ${formatMoney(roundTo(begin), currency)} to ${formatMoney(roundTo(end), currency)} over ${years} years, a CAGR of ${cagr.toFixed(2)}%.`,
     };
   },
   content: {
@@ -249,7 +251,7 @@ export const npsCalculator: CalculatorDefinition = {
     { id: "rate", label: "Expected return", type: "percentage", unit: "%", placeholder: "10", defaultValue: 10, validation: { required: true, min: 1, max: 20 } },
     { id: "years", label: "Years", type: "number", unit: "years", placeholder: "30", defaultValue: 30, validation: { required: true, min: 1, max: 50 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const monthly = parseNumber(v.monthly) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 30;
     const mr = rate / 12 / 100, months = Math.round(years * 12);
     const corpus = monthly > 0 && mr > 0 ? monthly * ((Math.pow(1 + mr, months) - 1) / mr) * (1 + mr) : monthly * months;
@@ -259,10 +261,10 @@ export const npsCalculator: CalculatorDefinition = {
     const invested = monthly * months;
     return {
       sections: [
-        { id: "primary", values: [{ id: "corpus", label: "ESTIMATED NPS CORPUS", value: formatINR(roundTo(corpus)), format: "currency", primary: true, description: `after ${years} years` }] },
-        { id: "summary", title: "NPS details", values: [{ id: "invested", label: "Total invested", value: formatINR(roundTo(invested)), format: "currency" }, { id: "lump", label: "Lump sum (60%)", value: formatINR(roundTo(lumpSum)), format: "currency" }, { id: "pension", label: "Est. monthly pension", value: formatINR(roundTo(monthlyPension)), format: "currency" }] },
+        { id: "primary", values: [{ id: "corpus", label: "ESTIMATED NPS CORPUS", value: roundTo(corpus), format: "currency", primary: true, description: `after ${years} years` }] },
+        { id: "summary", title: "NPS details", values: [{ id: "invested", label: "Total invested", value: roundTo(invested), format: "currency" }, { id: "lump", label: "Lump sum (60%)", value: roundTo(lumpSum), format: "currency" }, { id: "pension", label: "Est. monthly pension", value: roundTo(monthlyPension), format: "currency" }] },
       ],
-      interpretation: `With ${formatINR(roundTo(monthly))} monthly NPS contributions at ${rate}% for ${years} years, your estimated corpus is ${formatINR(roundTo(corpus))} with a monthly pension of about ${formatINR(roundTo(monthlyPension))}.`,
+      interpretation: `With ${formatMoney(roundTo(monthly), currency)} monthly NPS contributions at ${rate}% for ${years} years, your estimated corpus is ${formatMoney(roundTo(corpus), currency)} with a monthly pension of about ${formatMoney(roundTo(monthlyPension), currency)}.`,
     };
   },
   content: {
@@ -353,16 +355,16 @@ export const gratuityCalculator: CalculatorDefinition = {
     { id: "da", label: "Dearness allowance", type: "currency", unit: "₹", placeholder: "5000", defaultValue: 5000, validation: { required: true, min: 0, max: 1000000 } },
     { id: "years", label: "Years of service", type: "number", unit: "years", placeholder: "10", defaultValue: 10, validation: { required: true, min: 1, max: 50 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const basic = parseNumber(v.basic) ?? 0, da = parseNumber(v.da) ?? 0, years = parseNumber(v.years) ?? 10;
     const salary = basic + da;
     const gratuity = Math.min((salary * 15 * years) / 26, 2000000);
     return {
       sections: [
-        { id: "primary", values: [{ id: "gratuity", label: "GRATUITY AMOUNT", value: formatINR(roundTo(gratuity)), format: "currency", primary: true, description: `for ${years} years of service` }] },
-        { id: "details", title: "Gratuity details", values: [{ id: "salary", label: "Monthly salary (basic + DA)", value: formatINR(roundTo(salary)), format: "currency" }] },
+        { id: "primary", values: [{ id: "gratuity", label: "GRATUITY AMOUNT", value: roundTo(gratuity), format: "currency", primary: true, description: `for ${years} years of service` }] },
+        { id: "details", title: "Gratuity details", values: [{ id: "salary", label: "Monthly salary (basic + DA)", value: roundTo(salary), format: "currency" }] },
       ],
-      interpretation: `With a monthly salary of ${formatINR(roundTo(salary))} and ${years} years of service, gratuity is estimated at ${formatINR(roundTo(gratuity))}.`,
+      interpretation: `With a monthly salary of ${formatMoney(roundTo(salary), currency)} and ${years} years of service, gratuity is estimated at ${formatMoney(roundTo(gratuity), currency)}.`,
     };
   },
   content: {
@@ -452,7 +454,7 @@ export const hraCalculator: CalculatorDefinition = {
     { id: "rent", label: "Rent paid", type: "currency", unit: "₹", placeholder: "15000", defaultValue: 15000, validation: { required: true, min: 0, max: 1000000 } },
     { id: "metro", label: "Metro city", type: "dropdown", defaultValue: "yes", options: [{ label: "Yes", value: "yes" }, { label: "No", value: "no" }] },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const basic = parseNumber(v.basic) ?? 0, hraRecv = parseNumber(v.hra) ?? 0, rent = parseNumber(v.rent) ?? 0;
     const metro = String(v.metro ?? "yes");
     const cityFactor = metro === "yes" ? 0.5 : 0.4;
@@ -460,10 +462,10 @@ export const hraCalculator: CalculatorDefinition = {
     const taxable = hraRecv - exemption;
     return {
       sections: [
-        { id: "primary", values: [{ id: "exemption", label: "HRA EXEMPTION", value: formatINR(roundTo(exemption)), format: "currency", primary: true, description: `tax-exempt portion` }] },
-        { id: "details", title: "HRA details", values: [{ id: "taxable", label: "Taxable HRA", value: formatINR(roundTo(taxable)), format: "currency" }] },
+        { id: "primary", values: [{ id: "exemption", label: "HRA EXEMPTION", value: roundTo(exemption), format: "currency", primary: true, description: `tax-exempt portion` }] },
+        { id: "details", title: "HRA details", values: [{ id: "taxable", label: "Taxable HRA", value: roundTo(taxable), format: "currency" }] },
       ],
-      interpretation: `Of your ${formatINR(roundTo(hraRecv))} HRA, ${formatINR(roundTo(exemption))} is tax-exempt and ${formatINR(roundTo(taxable))} is taxable.`,
+      interpretation: `Of your ${formatMoney(roundTo(hraRecv), currency)} HRA, ${formatMoney(roundTo(exemption), currency)} is tax-exempt and ${formatMoney(roundTo(taxable), currency)} is taxable.`,
     };
   },
   content: {
@@ -554,7 +556,7 @@ export const epfCalculator: CalculatorDefinition = {
     { id: "rate", label: "EPF interest rate", type: "percentage", unit: "%", placeholder: "8.25", defaultValue: 8.25, validation: { required: true, min: 0, max: 15 } },
     { id: "years", label: "Years of service", type: "number", unit: "years", placeholder: "20", defaultValue: 20, validation: { required: true, min: 1, max: 45 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const basic = parseNumber(v.basic) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 20;
     const employeeShare = basic * 0.12;
     const employerShare = basic * 0.0833;
@@ -564,10 +566,10 @@ export const epfCalculator: CalculatorDefinition = {
     const invested = monthly * months;
     return {
       sections: [
-        { id: "primary", values: [{ id: "corpus", label: "EPF CORPUS", value: formatINR(roundTo(corpus)), format: "currency", primary: true, description: `after ${years} years` }] },
-        { id: "summary", title: "EPF details", values: [{ id: "monthly", label: "Monthly contribution", value: formatINR(roundTo(monthly)), format: "currency" }, { id: "invested", label: "Total contribution", value: formatINR(roundTo(invested)), format: "currency" }, { id: "interest", label: "Interest earned", value: formatINR(roundTo(corpus - invested)), format: "currency" }] },
+        { id: "primary", values: [{ id: "corpus", label: "EPF CORPUS", value: roundTo(corpus), format: "currency", primary: true, description: `after ${years} years` }] },
+        { id: "summary", title: "EPF details", values: [{ id: "monthly", label: "Monthly contribution", value: roundTo(monthly), format: "currency" }, { id: "invested", label: "Total contribution", value: roundTo(invested), format: "currency" }, { id: "interest", label: "Interest earned", value: roundTo(corpus - invested), format: "currency" }] },
       ],
-      interpretation: `With basic salary of ${formatINR(roundTo(basic))}, your monthly EPF contribution is ${formatINR(roundTo(monthly))}. After ${years} years at ${rate}%, the corpus is about ${formatINR(roundTo(corpus))}.`,
+      interpretation: `With basic salary of ${formatMoney(roundTo(basic), currency)}, your monthly EPF contribution is ${formatMoney(roundTo(monthly), currency)}. After ${years} years at ${rate}%, the corpus is about ${formatMoney(roundTo(corpus), currency)}.`,
     };
   },
   content: {
@@ -656,7 +658,7 @@ export const incomeTaxCalculator: CalculatorDefinition = {
     { id: "income", label: "Annual taxable income", type: "currency", unit: "₹", placeholder: "800000", defaultValue: 800000, validation: { required: true, min: 0, max: 100000000 } },
     { id: "regime", label: "Tax regime", type: "dropdown", defaultValue: "new", options: [{ label: "New regime", value: "new" }, { label: "Old regime", value: "old" }] },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const income = parseNumber(v.income) ?? 0;
     const regime = String(v.regime ?? "new");
     let tax = 0;
@@ -689,10 +691,10 @@ export const incomeTaxCalculator: CalculatorDefinition = {
     const takeHome = income - tax;
     return {
       sections: [
-        { id: "primary", values: [{ id: "tax", label: "INCOME TAX", value: formatINR(roundTo(tax)), format: "currency", primary: true, description: `${regime} regime` }] },
-        { id: "details", title: "Tax details", values: [{ id: "income", label: "Annual income", value: formatINR(roundTo(income)), format: "currency" }, { id: "takehome", label: "After-tax amount", value: formatINR(roundTo(takeHome)), format: "currency" }] },
+        { id: "primary", values: [{ id: "tax", label: "INCOME TAX", value: roundTo(tax), format: "currency", primary: true, description: `${regime} regime` }] },
+        { id: "details", title: "Tax details", values: [{ id: "income", label: "Annual income", value: roundTo(income), format: "currency" }, { id: "takehome", label: "After-tax amount", value: roundTo(takeHome), format: "currency" }] },
       ],
-      interpretation: `Under the ${regime} regime, your income tax for income of ${formatINR(roundTo(income))} is estimated at ${formatINR(roundTo(tax))}.`,
+      interpretation: `Under the ${regime} regime, your income tax for income of ${formatMoney(roundTo(income), currency)} is estimated at ${formatMoney(roundTo(tax), currency)}.`,
     };
   },
   content: {
@@ -783,7 +785,7 @@ export const salaryCalculator: CalculatorDefinition = {
     { id: "basic", label: "Basic salary (%)", type: "percentage", unit: "%", placeholder: "50", defaultValue: 50, validation: { required: true, min: 10, max: 90 } },
     { id: "pf", label: "PF contribution (%)", type: "percentage", unit: "%", placeholder: "12", defaultValue: 12, validation: { required: true, min: 0, max: 12 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const ctc = parseNumber(v.ctc) ?? 0, basicPct = parseNumber(v.basic) ?? 0, pfPct = parseNumber(v.pf) ?? 0;
     const basic = ctc * basicPct / 100;
     const pf = basic * pfPct / 100;
@@ -791,10 +793,10 @@ export const salaryCalculator: CalculatorDefinition = {
     const monthly = gross / 12;
     return {
       sections: [
-        { id: "primary", values: [{ id: "monthly", label: "ESTIMATED MONTHLY TAKE-HOME", value: formatINR(roundTo(monthly)), format: "currency", primary: true, description: `of ${formatINR(roundTo(ctc))} CTC` }] },
-        { id: "details", title: "Salary details", values: [{ id: "basic", label: "Basic salary", value: formatINR(roundTo(basic)), format: "currency" }, { id: "pf", label: "Annual PF", value: formatINR(roundTo(pf)), format: "currency" }] },
+        { id: "primary", values: [{ id: "monthly", label: "ESTIMATED MONTHLY TAKE-HOME", value: roundTo(monthly), format: "currency", primary: true, description: `of ${formatMoney(roundTo(ctc), currency)} CTC` }] },
+        { id: "details", title: "Salary details", values: [{ id: "basic", label: "Basic salary", value: roundTo(basic), format: "currency" }, { id: "pf", label: "Annual PF", value: roundTo(pf), format: "currency" }] },
       ],
-      interpretation: `From a CTC of ${formatINR(roundTo(ctc))}, your estimated monthly take-home is around ${formatINR(roundTo(monthly))} after PF and standard deductions.`,
+      interpretation: `From a CTC of ${formatMoney(roundTo(ctc), currency)}, your estimated monthly take-home is around ${formatMoney(roundTo(monthly), currency)} after PF and standard deductions.`,
     };
   },
   content: {
@@ -884,18 +886,18 @@ export const homeLoanEmiCalculator: CalculatorDefinition = {
     { id: "rate", label: "Interest rate", type: "percentage", unit: "%", placeholder: "8.5", defaultValue: 8.5, validation: { required: true, min: 0.1, max: 20 } },
     { id: "years", label: "Loan term", type: "number", unit: "years", placeholder: "20", defaultValue: 20, validation: { required: true, min: 1, max: 40 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const principal = parseNumber(v.principal) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 20;
     const months = Math.round(years * 12);
     const emi = principal > 0 ? calculateEMI(principal, rate, months) : 0;
     const totalPayment = emi * months, totalInterest = totalPayment - principal;
     return {
       sections: [
-        { id: "primary", values: [{ id: "emi", label: "MONTHLY EMI", value: formatINR(roundTo(emi)), format: "currency", primary: true, description: `for ${months} months` }] },
-        { id: "summary", title: "Loan summary", values: [{ id: "interest", label: "Total interest", value: formatINR(roundTo(totalInterest)), format: "currency" }, { id: "total", label: "Total payment", value: formatINR(roundTo(totalPayment)), format: "currency" }] },
+        { id: "primary", values: [{ id: "emi", label: "MONTHLY EMI", value: roundTo(emi), format: "currency", primary: true, description: `for ${months} months` }] },
+        { id: "summary", title: "Loan summary", values: [{ id: "interest", label: "Total interest", value: roundTo(totalInterest), format: "currency" }, { id: "total", label: "Total payment", value: roundTo(totalPayment), format: "currency" }] },
       ],
       chart: { type: "bar", title: "Principal vs Interest", data: [{ label: "Principal", value: roundTo(principal, 0), color: "var(--accent)" }, { label: "Interest", value: roundTo(totalInterest, 0), color: "var(--muted)" }] },
-      interpretation: `Your home loan of ${formatINR(roundTo(principal))} has an EMI of ${formatINR(roundTo(emi))}. Total interest: ${formatINR(roundTo(totalInterest))}.`,
+      interpretation: `Your home loan of ${formatMoney(roundTo(principal), currency)} has an EMI of ${formatMoney(roundTo(emi), currency)}. Total interest: ${formatMoney(roundTo(totalInterest), currency)}.`,
     };
   },
   content: {
@@ -986,18 +988,18 @@ export const carLoanEmiCalculator: CalculatorDefinition = {
     { id: "rate", label: "Interest rate", type: "percentage", unit: "%", placeholder: "9", defaultValue: 9, validation: { required: true, min: 0.1, max: 25 } },
     { id: "years", label: "Loan term", type: "number", unit: "years", placeholder: "5", defaultValue: 5, validation: { required: true, min: 1, max: 8 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const principal = parseNumber(v.principal) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 5;
     const months = Math.round(years * 12);
     const emi = principal > 0 ? calculateEMI(principal, rate, months) : 0;
     const totalPayment = emi * months, totalInterest = totalPayment - principal;
     return {
       sections: [
-        { id: "primary", values: [{ id: "emi", label: "MONTHLY EMI", value: formatINR(roundTo(emi)), format: "currency", primary: true, description: `for ${months} months` }] },
-        { id: "summary", title: "Loan summary", values: [{ id: "interest", label: "Total interest", value: formatINR(roundTo(totalInterest)), format: "currency" }, { id: "total", label: "Total payment", value: formatINR(roundTo(totalPayment)), format: "currency" }] },
+        { id: "primary", values: [{ id: "emi", label: "MONTHLY EMI", value: roundTo(emi), format: "currency", primary: true, description: `for ${months} months` }] },
+        { id: "summary", title: "Loan summary", values: [{ id: "interest", label: "Total interest", value: roundTo(totalInterest), format: "currency" }, { id: "total", label: "Total payment", value: roundTo(totalPayment), format: "currency" }] },
       ],
       chart: { type: "bar", title: "Principal vs Interest", data: [{ label: "Principal", value: roundTo(principal, 0), color: "var(--accent)" }, { label: "Interest", value: roundTo(totalInterest, 0), color: "var(--muted)" }] },
-      interpretation: `Your car loan of ${formatINR(roundTo(principal))} has an EMI of ${formatINR(roundTo(emi))}. Total interest: ${formatINR(roundTo(totalInterest))}.`,
+      interpretation: `Your car loan of ${formatMoney(roundTo(principal), currency)} has an EMI of ${formatMoney(roundTo(emi), currency)}. Total interest: ${formatMoney(roundTo(totalInterest), currency)}.`,
     };
   },
   content: {
@@ -1088,18 +1090,18 @@ export const personalLoanEmiCalculator: CalculatorDefinition = {
     { id: "rate", label: "Interest rate", type: "percentage", unit: "%", placeholder: "12", defaultValue: 12, validation: { required: true, min: 0.1, max: 30 } },
     { id: "years", label: "Loan term", type: "number", unit: "years", placeholder: "3", defaultValue: 3, validation: { required: true, min: 1, max: 7 } },
   ],
-  calculate: (v) => {
+  calculate: (v, currency = DEFAULT_CURRENCY) => {
     const principal = parseNumber(v.principal) ?? 0, rate = parseNumber(v.rate) ?? 0, years = parseNumber(v.years) ?? 3;
     const months = Math.round(years * 12);
     const emi = principal > 0 ? calculateEMI(principal, rate, months) : 0;
     const totalPayment = emi * months, totalInterest = totalPayment - principal;
     return {
       sections: [
-        { id: "primary", values: [{ id: "emi", label: "MONTHLY EMI", value: formatINR(roundTo(emi)), format: "currency", primary: true, description: `for ${months} months` }] },
-        { id: "summary", title: "Loan summary", values: [{ id: "interest", label: "Total interest", value: formatINR(roundTo(totalInterest)), format: "currency" }, { id: "total", label: "Total payment", value: formatINR(roundTo(totalPayment)), format: "currency" }] },
+        { id: "primary", values: [{ id: "emi", label: "MONTHLY EMI", value: roundTo(emi), format: "currency", primary: true, description: `for ${months} months` }] },
+        { id: "summary", title: "Loan summary", values: [{ id: "interest", label: "Total interest", value: roundTo(totalInterest), format: "currency" }, { id: "total", label: "Total payment", value: roundTo(totalPayment), format: "currency" }] },
       ],
       chart: { type: "bar", title: "Principal vs Interest", data: [{ label: "Principal", value: roundTo(principal, 0), color: "var(--accent)" }, { label: "Interest", value: roundTo(totalInterest, 0), color: "var(--muted)" }] },
-      interpretation: `Your personal loan of ${formatINR(roundTo(principal))} has an EMI of ${formatINR(roundTo(emi))}. Total interest: ${formatINR(roundTo(totalInterest))}.`,
+      interpretation: `Your personal loan of ${formatMoney(roundTo(principal), currency)} has an EMI of ${formatMoney(roundTo(emi), currency)}. Total interest: ${formatMoney(roundTo(totalInterest), currency)}.`,
     };
   },
   content: {
