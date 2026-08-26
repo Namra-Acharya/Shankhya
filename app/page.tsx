@@ -19,9 +19,9 @@ function toCarouselData(calc: CalculatorDefinition): CarouselCalculator {
 }
 
 export const metadata = buildMetadata({
-  title: "Free Online Calculators – Finance, Health, Math & More",
+  title: "Shankhya – Free Online Calculators for Finance, Health & Math",
   description:
-    "Free online calculators for finance, health, math, construction, education and everyday decisions. Fast, accurate and easy to use with clear explanations.",
+    "Shankhya is a free online calculator platform for finance, health, math, construction, education and everyday decisions. Fast, accurate, easy to use with clear explanations.",
   path: "/",
 });
 

@@ -9,17 +9,26 @@ interface ThemeContextValue {
   toggleTheme: () => void;
 }
 
+const STORAGE_KEY = "Shankhya-theme";
+
 const ThemeContext = createContext<ThemeContextValue>({
   theme: "light",
   toggleTheme: () => {},
 });
 
+/**
+ * Shankhya always opens in LIGHT mode on first visit.
+ * We never follow the user's OS dark-mode preference automatically.
+ * Only an explicit manual choice is persisted and respected on return visits.
+ */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "light";
-    const stored = localStorage.getItem("Shankhya-theme") as Theme | null;
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    return stored ?? (prefersDark ? "dark" : "light");
+    try {
+      return localStorage.getItem(STORAGE_KEY) === "dark" ? "dark" : "light";
+    } catch {
+      return "light";
+    }
   });
 
   useEffect(() => {
@@ -29,7 +38,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const toggleTheme = () => {
     setTheme((prev) => {
       const next = prev === "light" ? "dark" : "light";
-      localStorage.setItem("Shankhya-theme", next);
+      try {
+        localStorage.setItem(STORAGE_KEY, next);
+      } catch {
+        // ignore storage errors
+      }
       document.documentElement.classList.toggle("dark", next === "dark");
       return next;
     });

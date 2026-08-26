@@ -11,7 +11,19 @@ import { getCategoryById } from "@/lib/calculators/registry";
 const POPULAR_SEARCHES = ["age", "emi", "percentage", "cgpa", "sip", "gst"];
 
 export function CalculatorSearch({ autoFocus = false }: { autoFocus?: boolean }) {
-  const [query, setQuery] = useState("");
+  // Initial query can come from a ?q= URL param (e.g. site search links or the
+  // WebSite SearchAction structured data). The canonical/clean URL remains
+  // indexable; search/state variants canonicalize away and never create
+  // separate indexable pages.
+  const [query, setQuery] = useState(() => {
+    if (typeof window === "undefined") return "";
+    try {
+      const q = new URLSearchParams(window.location.search).get("q");
+      return q ? q.trim() : "";
+    } catch {
+      return "";
+    }
+  });
   const [results, setResults] = useState<CalculatorDefinition[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);

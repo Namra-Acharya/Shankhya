@@ -52,6 +52,11 @@ export default function RootLayout({
     <html lang="en" className={inter.variable} suppressHydrationWarning data-scroll-behavior="smooth">
       <body>
         <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("Shankhya-theme");if(t==="dark"){document.documentElement.classList.add("dark");}}catch(e){}})();`,
+          }}
+        />
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
         />

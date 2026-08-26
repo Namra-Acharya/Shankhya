@@ -5,7 +5,7 @@
 import type { Metadata } from "next";
 
 export const SITE_NAME = "Shankhya";
-export const SITE_URL = "https://shankhya.vercel.app";
+export const SITE_URL = "https://shankhya.com";
 export const SITE_DESCRIPTION =
   "Free online calculators for finance, health, math, construction and more. Fast, accurate and easy to use with clear explanations.";
 
